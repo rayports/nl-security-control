@@ -1,8 +1,15 @@
+const logger = require('../utils/logger');
+
 const errorHandler = (err, req, res, next) => {
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
 
-  console.log(`Error [${req.correlationId}]: ${message}`);
+  // Log error with structured JSON
+  logger.error({
+    message: message,
+    stack: err.stack,
+    correlationId: req.correlationId
+  });
 
   res.status(status).json({
     success: false,
