@@ -3,8 +3,14 @@ import CommandInput from './components/CommandInput/CommandInput';
 import ResultsDisplay from './components/ResultsDisplay/ResultsDisplay';
 import ErrorDisplay from './components/ErrorDisplay/ErrorDisplay';
 import ExampleCommands from './components/ExampleCommands/ExampleCommands';
+import { sendCommand } from './services/api';
 
 function App() {
+  // Temporarily expose sendCommand for testing in browser console
+  // Remove this after wiring up the UI
+  if (typeof window !== 'undefined') {
+    window.testSendCommand = sendCommand;
+  }
   const exampleCommands = [
     'arm the system',
     'disarm the system',
