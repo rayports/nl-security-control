@@ -25,15 +25,7 @@ const classifyIntent = (text) => {
     /set\s+(the\s+)?(alarm|system)\s+to\s+(armed|on)/i
   ];
 
-  // ADD_USER patterns
-  const addUserPatterns = [
-    /add\s+(a\s+)?user/i,
-    /create\s+(a\s+)?user/i,
-    /register\s+(a\s+)?user/i,
-    /new\s+user/i
-  ];
-
-  // REMOVE_USER patterns
+  // REMOVE_USER patterns (check before ADD_USER to avoid "unregister" matching "register")
   const removeUserPatterns = [
     /remove\s+(a\s+)?user/i,
     /delete\s+(a\s+)?user/i,
@@ -41,6 +33,15 @@ const classifyIntent = (text) => {
     /drop\s+(a\s+)?user/i,
     /^remove\s+[A-Z][a-z]+/i,
     /^delete\s+[A-Z][a-z]+/i
+  ];
+
+  // ADD_USER patterns
+  const addUserPatterns = [
+    /add\s+(a\s+)?user/i,
+    /create\s+(a\s+)?user/i,
+    /^register\s+(a\s+)?user/i,
+    /\bregister\s+(a\s+)?user\b/i,
+    /new\s+user/i
   ];
 
   // LIST_USERS patterns
@@ -62,12 +63,12 @@ const classifyIntent = (text) => {
     return 'ARM_SYSTEM';
   }
 
-  if (addUserPatterns.some(pattern => pattern.test(lowerText))) {
-    return 'ADD_USER';
-  }
-
   if (removeUserPatterns.some(pattern => pattern.test(lowerText))) {
     return 'REMOVE_USER';
+  }
+
+  if (addUserPatterns.some(pattern => pattern.test(lowerText))) {
+    return 'ADD_USER';
   }
 
   if (listUsersPatterns.some(pattern => pattern.test(lowerText))) {
