@@ -127,5 +127,149 @@ describe('App', () => {
     // Verify results are not displayed
     expect(screen.queryByText('User Input')).not.toBeInTheDocument();
   });
+
+  test('saves command to history after successful execution', async () => {
+    const mockResponse = {
+      text: 'arm the system',
+      interpretation: { intent: 'ARM_SYSTEM' },
+      api_call: { endpoint: '/api/arm-system' },
+      response: { success: true }
+    };
+
+    sendCommand.mockResolvedValue(mockResponse);
+
+    // Clear localStorage before test
+    localStorage.clear();
+
+    render(<App />);
+
+    const textarea = screen.getByPlaceholderText('Enter your command...');
+    const submitButton = screen.getByRole('button', { name: /execute command/i });
+
+    fireEvent.change(textarea, { target: { value: 'arm the system' } });
+    fireEvent.click(submitButton);
+
+    // Wait for command to complete
+    await waitFor(() => {
+      expect(screen.getByText('User Input')).toBeInTheDocument();
+    });
+
+    // Verify history appears
+    await waitFor(() => {
+      expect(screen.getByText(/command history/i)).toBeInTheDocument();
+    });
+
+    // Verify command appears in history (scope to history container)
+    const historyContainer = screen.getByTestId('command-history');
+    expect(within(historyContainer).getByText('arm the system')).toBeInTheDocument();
+
+    // Verify history is saved to localStorage
+    const stored = localStorage.getItem('nl-security-command-history');
+    expect(stored).toBeTruthy();
+    const history = JSON.parse(stored);
+    expect(history).toHaveLength(1);
+    expect(history[0].command).toBe('arm the system');
+    expect(history[0].success).toBe(true);
+  });
+
+  test('saves failed command to history', async () => {
+    const mockError = new Error('Invalid command');
+    sendCommand.mockRejectedValue(mockError);
+
+    localStorage.clear();
+
+    render(<App />);
+
+    const textarea = screen.getByPlaceholderText('Enter your command...');
+    const submitButton = screen.getByRole('button', { name: /execute command/i });
+
+    fireEvent.change(textarea, { target: { value: 'invalid command' } });
+    fireEvent.click(submitButton);
+
+    // Wait for error to appear
+    await waitFor(() => {
+      expect(screen.getByText(/error/i)).toBeInTheDocument();
+    });
+
+    // Verify history appears with failed command
+    await waitFor(() => {
+      expect(screen.getByText(/command history/i)).toBeInTheDocument();
+    });
+
+    // Verify failed command appears in history (scope to history container)
+    const historyContainer = screen.getByTestId('command-history');
+    expect(within(historyContainer).getByText('invalid command')).toBeInTheDocument();
+
+    // Verify history is saved with success: false
+    const stored = localStorage.getItem('nl-security-command-history');
+    const history = JSON.parse(stored);
+    expect(history).toHaveLength(1);
+    expect(history[0].command).toBe('invalid command');
+    expect(history[0].success).toBe(false);
+  });
+
+  test('loads command history from localStorage on mount', () => {
+    const mockHistory = [
+      { command: 'arm the system', timestamp: new Date().toISOString(), success: true },
+      { command: 'disarm the system', timestamp: new Date().toISOString(), success: true }
+    ];
+    localStorage.setItem('nl-security-command-history', JSON.stringify(mockHistory));
+
+    render(<App />);
+
+    // Verify history is displayed
+    expect(screen.getByText(/command history/i)).toBeInTheDocument();
+    
+    // Verify commands appear in history (scope to history container)
+    const historyContainer = screen.getByTestId('command-history');
+    expect(within(historyContainer).getByText('arm the system')).toBeInTheDocument();
+    expect(within(historyContainer).getByText('disarm the system')).toBeInTheDocument();
+  });
+
+  test('clicking history item populates command input', async () => {
+    const mockHistory = [
+      { command: 'arm the system', timestamp: new Date().toISOString(), success: true }
+    ];
+    localStorage.setItem('nl-security-command-history', JSON.stringify(mockHistory));
+
+    render(<App />);
+
+    const textarea = screen.getByPlaceholderText('Enter your command...');
+    
+    // Find and click history item
+    const historyItem = screen.getByTestId('history-item-0');
+    fireEvent.click(historyItem);
+
+    // Verify command is populated in textarea
+    expect(textarea).toHaveValue('arm the system');
+  });
+
+  test('limits history to MAX_HISTORY_ITEMS (10)', async () => {
+    sendCommand.mockResolvedValue({ text: 'test', interpretation: {}, api_call: {}, response: { success: true } });
+
+    localStorage.clear();
+    render(<App />);
+
+    const textarea = screen.getByPlaceholderText('Enter your command...');
+    const submitButton = screen.getByRole('button', { name: /execute command/i });
+
+    // Execute 12 commands
+    for (let i = 1; i <= 12; i++) {
+      fireEvent.change(textarea, { target: { value: `command ${i}` } });
+      fireEvent.click(submitButton);
+      await waitFor(() => {
+        expect(sendCommand).toHaveBeenCalledWith(`command ${i}`);
+      });
+    }
+
+    // Verify only 10 items in history
+    const stored = localStorage.getItem('nl-security-command-history');
+    const history = JSON.parse(stored);
+    expect(history).toHaveLength(10);
+    // Most recent should be command 12
+    expect(history[0].command).toBe('command 12');
+    // Oldest should be command 3 (commands 1 and 2 should be removed)
+    expect(history[9].command).toBe('command 3');
+  });
 });
 
