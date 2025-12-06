@@ -82,12 +82,15 @@ router.post('/execute', async (req, res, next) => {
           error.status = 400;
           return next(error);
         }
+        // Build payload matching PDF spec: { name } OR { pin }
+        const removePayload = entities.name 
+          ? { name: entities.name }
+          : { pin: entities.pin };
+        
         apiCall = {
           endpoint: '/api/remove-user',
           method: 'POST',
-          payload: {
-            identifier: entities.name || entities.pin
-          }
+          payload: removePayload
         };
         response = {
           success: true,

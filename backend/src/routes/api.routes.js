@@ -48,14 +48,15 @@ router.post('/add-user', async (req, res, next) => {
 
 router.post('/remove-user', async (req, res, next) => {
   try {
-    const { identifier } = req.body;
+    const { name, pin } = req.body;
     
-    if (!identifier) {
-      const error = new Error('Identifier (name or PIN) is required');
+    if (!name && !pin) {
+      const error = new Error('Name or PIN is required');
       error.status = 400;
       return next(error);
     }
 
+    const identifier = name || pin;
     const user = userService.removeUser(identifier);
     res.json({ success: true, user });
   } catch (error) {

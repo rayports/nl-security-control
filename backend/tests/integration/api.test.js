@@ -43,7 +43,7 @@ describe('API Routes', () => {
       const removeResponse = await request(app)
         .post('/api/remove-user')
         .send({
-          identifier: 'John'
+          name: 'John'
         });
 
       expect(removeResponse.status).toBe(200);

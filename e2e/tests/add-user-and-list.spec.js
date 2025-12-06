@@ -13,11 +13,28 @@ test.describe('Add User and List Users E2E', () => {
     await commandInput.fill('add user John with pin 4321');
     await submitButton.click();
 
+    // Wait for either results or error to appear
+    const resultsDisplay = page.locator('.results-display');
+    const errorDisplay = page.locator('.error-display');
+    
+    // Wait for either results or error (whichever appears first)
+    await Promise.race([
+      resultsDisplay.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null),
+      errorDisplay.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null)
+    ]);
+
+    // Check if error appeared instead of results
+    const isErrorVisible = await errorDisplay.isVisible().catch(() => false);
+    if (isErrorVisible) {
+      const errorText = await errorDisplay.textContent();
+      throw new Error(`Command failed with error: ${errorText}`);
+    }
+
     // Wait for results to appear
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 10000 });
+    await expect(resultsDisplay).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 5000 });
 
     // Verify success - check for ADD_USER intent
-    const resultsDisplay = page.locator('.results-display');
     await expect(resultsDisplay).toBeVisible();
 
     const interpretationSection = resultsDisplay.locator('section').filter({ hasText: 'Interpretation' });
@@ -26,7 +43,6 @@ test.describe('Add User and List Users E2E', () => {
     expect(interpretationText).toContain('John');
 
     // Verify no error is displayed
-    const errorDisplay = page.locator('.error-display');
     await expect(errorDisplay).not.toBeVisible();
 
     // Step 2: Clear the input and list users
@@ -34,8 +50,22 @@ test.describe('Add User and List Users E2E', () => {
     await commandInput.fill('show me all users');
     await submitButton.click();
 
-    // Wait for new results to appear
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 10000 });
+    // Wait for new results to appear (or error)
+    await Promise.race([
+      resultsDisplay.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null),
+      errorDisplay.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null)
+    ]);
+
+    // Check if error appeared
+    const isErrorVisible2 = await errorDisplay.isVisible().catch(() => false);
+    if (isErrorVisible2) {
+      const errorText = await errorDisplay.textContent();
+      throw new Error(`List users command failed with error: ${errorText}`);
+    }
+
+    // Wait for results to appear
+    await expect(resultsDisplay).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 5000 });
 
     // Verify the results display is visible
     await expect(resultsDisplay).toBeVisible();

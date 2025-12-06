@@ -88,7 +88,7 @@ describe('NLP Routes', () => {
         endpoint: '/api/remove-user',
         method: 'POST',
         payload: {
-          identifier: 'John'
+          name: 'John'
         }
       });
 
