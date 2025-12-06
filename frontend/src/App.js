@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import CommandInput from './components/CommandInput/CommandInput';
 import ResultsDisplay from './components/ResultsDisplay/ResultsDisplay';
 import ErrorDisplay from './components/ErrorDisplay/ErrorDisplay';
-import ExampleCommands from './components/ExampleCommands/ExampleCommands';
 import CommandHistory from './components/CommandHistory/CommandHistory';
+import HistoryDetailView from './components/HistoryDetailView/HistoryDetailView';
 import { sendCommand } from './services/api';
-import { exampleCommands } from './utils/constants';
+import { PLACEHOLDER_TEXT, HINT_TEXT } from './utils/constants';
 
 const HISTORY_STORAGE_KEY = 'nl-security-command-history';
 const MAX_HISTORY_ITEMS = 10;
@@ -16,6 +16,7 @@ function App() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [commandHistory, setCommandHistory] = useState([]);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -24,9 +25,13 @@ function App() {
       if (stored) {
         const parsed = JSON.parse(stored);
         // Convert timestamp strings back to Date objects
+        // Ensure backward compatibility with old history format (without result/error)
         const history = parsed.map(item => ({
           ...item,
-          timestamp: new Date(item.timestamp)
+          timestamp: new Date(item.timestamp),
+          // Old items may not have result/error, ensure they're set to null
+          result: item.result || null,
+          error: item.error || null
         }));
         setCommandHistory(history);
       }
@@ -54,25 +59,27 @@ function App() {
       setResult(response);
       setError(null);
       
-      // Add successful command to history
-      addToHistory(text, true);
+      // Add successful command to history with full result data
+      addToHistory(text, true, response, null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
       setResult(null);
       
-      // Add failed command to history
-      addToHistory(text, false);
+      // Add failed command to history with error message
+      addToHistory(text, false, null, errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const addToHistory = (command, success) => {
+  const addToHistory = (command, success, result = null, error = null) => {
     const historyItem = {
       command: command.trim(),
       timestamp: new Date(),
-      success: success
+      success: success,
+      result: result || null,
+      error: error || null
     };
     
     setCommandHistory(prev => {
@@ -85,9 +92,12 @@ function App() {
     });
   };
 
-  const handleCommandSelect = (command) => {
-    setCommandText(command);
-    setError(null);
+  const handleHistoryItemClick = (historyItem) => {
+    setSelectedHistoryItem(historyItem);
+  };
+
+  const handleCloseDetailView = () => {
+    setSelectedHistoryItem(null);
   };
 
   const handleRetry = () => {
@@ -103,21 +113,18 @@ function App() {
       </header>
 
       <main>
-        <ExampleCommands
-          commands={exampleCommands}
-          onCommandClick={handleCommandSelect}
-        />
-
         <CommandInput
           value={commandText}
           onChange={setCommandText}
           onSubmit={handleSubmit}
           loading={loading}
+          placeholder={PLACEHOLDER_TEXT}
+          hintText={HINT_TEXT}
         />
 
         <CommandHistory
           history={commandHistory}
-          onCommandSelect={handleCommandSelect}
+          onHistoryItemClick={handleHistoryItemClick}
         />
 
         <ErrorDisplay
@@ -127,6 +134,11 @@ function App() {
 
         <ResultsDisplay
           result={result}
+        />
+
+        <HistoryDetailView
+          historyItem={selectedHistoryItem}
+          onClose={handleCloseDetailView}
         />
       </main>
     </div>

@@ -12,6 +12,14 @@
   resize: vertical;
 }
 
+.command-hint {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-top: -5px;
+  padding: 0 2px;
+}
+
 .command-input button {
   padding: 10px 20px;
   font-size: 16px;

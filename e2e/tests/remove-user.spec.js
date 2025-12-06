@@ -6,7 +6,7 @@ test.describe('Remove User E2E', () => {
     await page.goto('/');
 
     // Find the command input and submit button
-    const commandInput = page.getByPlaceholder('Enter your command...');
+    const commandInput = page.getByPlaceholder("Try: 'arm the system' or 'add user John with pin 4321'");
     const submitButton = page.getByRole('button', { name: /execute command/i });
 
     // Step 1: Add a user first

@@ -8,18 +8,17 @@ test.describe('Smoke Test - UI Rendering', () => {
     // Verify main heading is visible
     await expect(page.getByRole('heading', { name: 'Natural Language Security Control' })).toBeVisible();
 
-    // Verify command input textarea is visible
-    await expect(page.getByPlaceholder('Enter your command...')).toBeVisible();
+    // Verify command input textarea is visible with placeholder
+    await expect(page.getByPlaceholder("Try: 'arm the system' or 'add user John with pin 4321'")).toBeVisible();
 
     // Verify submit button is visible
     await expect(page.getByRole('button', { name: /execute command/i })).toBeVisible();
 
-    // Verify example commands section is visible
-    await expect(page.getByText(/example commands/i)).toBeVisible();
+    // Verify hint text is visible
+    await expect(page.getByText(/you can arm\/disarm the system/i)).toBeVisible();
 
-    // Verify at least one example command button is visible
-    const exampleCommands = page.locator('.example-command-button');
-    await expect(exampleCommands.first()).toBeVisible();
+    // Verify example commands section is NOT visible
+    await expect(page.getByText(/example commands/i)).not.toBeVisible();
   });
 });
 

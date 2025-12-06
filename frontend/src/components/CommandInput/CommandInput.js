@@ -1,7 +1,7 @@
 import React from 'react';
 import './CommandInput.css';
 
-function CommandInput({ value, onChange, onSubmit, loading, disabled }) {
+function CommandInput({ value, onChange, onSubmit, loading, disabled, placeholder, hintText }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const text = value?.trim() || '';
@@ -21,10 +21,15 @@ function CommandInput({ value, onChange, onSubmit, loading, disabled }) {
       <textarea
         value={value || ''}
         onChange={handleChange}
-        placeholder="Enter your command..."
+        placeholder={placeholder || "Enter your command..."}
         disabled={disabled || loading}
         rows={3}
       />
+      {hintText && (
+        <div className="command-hint">
+          {hintText}
+        </div>
+      )}
       <button type="submit" disabled={disabled || loading || !value?.trim()}>
         {loading ? 'Processing...' : 'Execute Command'}
       </button>

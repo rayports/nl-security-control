@@ -5,7 +5,7 @@ test.describe('Command History', () => {
     await page.goto('/');
 
     // Execute a command
-    const textarea = page.getByPlaceholder('Enter your command...');
+    const textarea = page.getByPlaceholder("Try: 'arm the system' or 'add user John with pin 4321'");
     await textarea.fill('arm the system');
     await page.getByRole('button', { name: /execute command/i }).click();
 
@@ -28,7 +28,7 @@ test.describe('Command History', () => {
     await page.goto('/');
 
     // Execute an invalid command
-    const textarea = page.getByPlaceholder('Enter your command...');
+    const textarea = page.getByPlaceholder(/try:.*arm the system/i);
     await textarea.fill('invalid command that will fail');
     await page.getByRole('button', { name: /execute command/i }).click();
 
@@ -47,11 +47,11 @@ test.describe('Command History', () => {
     await expect(historyItem.getByText('✗')).toBeVisible();
   });
 
-  test('should populate command input when clicking history item', async ({ page }) => {
+  test('should show detailed view when clicking history item', async ({ page }) => {
     await page.goto('/');
 
     // First, execute a command to create history
-    const textarea = page.getByPlaceholder('Enter your command...');
+    const textarea = page.getByPlaceholder(/try:.*arm the system/i);
     await textarea.fill('arm the system');
     await page.getByRole('button', { name: /execute command/i }).click();
 
@@ -65,15 +65,23 @@ test.describe('Command History', () => {
     const historyItem = page.getByTestId('history-item-0');
     await historyItem.click();
 
-    // Verify command is populated in textarea
-    await expect(textarea).toHaveValue('arm the system');
+    // Verify detailed view is shown
+    await expect(page.getByText('Command Details')).toBeVisible();
+    await expect(page.getByText('Original Command')).toBeVisible();
+    
+    // Scope query to detail modal to avoid matching history item
+    const detailModal = page.locator('.history-detail-modal');
+    await expect(detailModal.getByText('arm the system')).toBeVisible();
+
+    // Verify command is NOT populated in textarea
+    await expect(textarea).toHaveValue('');
   });
 
   test('should persist history across page reloads', async ({ page }) => {
     await page.goto('/');
 
     // Execute a command
-    const textarea = page.getByPlaceholder('Enter your command...');
+    const textarea = page.getByPlaceholder("Try: 'arm the system' or 'add user John with pin 4321'");
     await textarea.fill('disarm the system');
     await page.getByRole('button', { name: /execute command/i }).click();
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import './CommandHistory.css';
 
-function CommandHistory({ history, onCommandSelect }) {
+function CommandHistory({ history, onHistoryItemClick }) {
   if (!history || history.length === 0) {
     return null;
   }
@@ -35,7 +35,7 @@ function CommandHistory({ history, onCommandSelect }) {
           <div
             key={index}
             className={`history-item ${item.success ? 'success' : 'error'}`}
-            onClick={() => onCommandSelect && onCommandSelect(item.command)}
+            onClick={() => onHistoryItemClick && onHistoryItemClick(item)}
             data-testid={`history-item-${index}`}
           >
             <div className="history-command">{item.command}</div>

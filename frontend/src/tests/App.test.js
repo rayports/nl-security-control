@@ -18,14 +18,19 @@ describe('App', () => {
     // Check for main heading
     expect(screen.getByText('Natural Language Security Control')).toBeInTheDocument();
 
-    // Check for command input textarea
-    expect(screen.getByPlaceholderText('Enter your command...')).toBeInTheDocument();
+    // Check for command input textarea with placeholder
+    const { PLACEHOLDER_TEXT } = require('../utils/constants');
+    expect(screen.getByPlaceholderText(PLACEHOLDER_TEXT)).toBeInTheDocument();
 
     // Check for submit button
     expect(screen.getByRole('button', { name: /execute command/i })).toBeInTheDocument();
 
-    // Check for example commands section
-    expect(screen.getByText(/example commands/i)).toBeInTheDocument();
+    // Check for hint text
+    const { HINT_TEXT } = require('../utils/constants');
+    expect(screen.getByText(HINT_TEXT)).toBeInTheDocument();
+
+    // Verify ExampleCommands component is NOT rendered
+    expect(screen.queryByText(/example commands/i)).not.toBeInTheDocument();
   });
 
   test('handles successful command submission', async () => {
@@ -51,7 +56,8 @@ describe('App', () => {
     render(<App />);
 
     // Find the textarea and submit button
-    const textarea = screen.getByPlaceholderText('Enter your command...');
+    const { PLACEHOLDER_TEXT } = require('../utils/constants');
+    const textarea = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     const submitButton = screen.getByRole('button', { name: /execute command/i });
 
     // Type a command
@@ -99,7 +105,8 @@ describe('App', () => {
     render(<App />);
 
     // Find the textarea and submit button
-    const textarea = screen.getByPlaceholderText('Enter your command...');
+    const { PLACEHOLDER_TEXT } = require('../utils/constants');
+    const textarea = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     const submitButton = screen.getByRole('button', { name: /execute command/i });
 
     // Type a command
@@ -143,7 +150,8 @@ describe('App', () => {
 
     render(<App />);
 
-    const textarea = screen.getByPlaceholderText('Enter your command...');
+    const { PLACEHOLDER_TEXT } = require('../utils/constants');
+    const textarea = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     const submitButton = screen.getByRole('button', { name: /execute command/i });
 
     fireEvent.change(textarea, { target: { value: 'arm the system' } });
@@ -170,6 +178,9 @@ describe('App', () => {
     expect(history).toHaveLength(1);
     expect(history[0].command).toBe('arm the system');
     expect(history[0].success).toBe(true);
+    // Verify full result data is stored
+    expect(history[0].result).toEqual(mockResponse);
+    expect(history[0].error).toBeNull();
   });
 
   test('saves failed command to history', async () => {
@@ -180,7 +191,8 @@ describe('App', () => {
 
     render(<App />);
 
-    const textarea = screen.getByPlaceholderText('Enter your command...');
+    const { PLACEHOLDER_TEXT } = require('../utils/constants');
+    const textarea = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     const submitButton = screen.getByRole('button', { name: /execute command/i });
 
     fireEvent.change(textarea, { target: { value: 'invalid command' } });
@@ -206,6 +218,9 @@ describe('App', () => {
     expect(history).toHaveLength(1);
     expect(history[0].command).toBe('invalid command');
     expect(history[0].success).toBe(false);
+    // Verify error message is stored
+    expect(history[0].error).toBe('Invalid command');
+    expect(history[0].result).toBeNull();
   });
 
   test('loads command history from localStorage on mount', () => {
@@ -226,22 +241,63 @@ describe('App', () => {
     expect(within(historyContainer).getByText('disarm the system')).toBeInTheDocument();
   });
 
-  test('clicking history item populates command input', async () => {
+  test('handles backward compatibility with old history format (without result/error)', () => {
+    // Old history format without result/error fields
+    const oldFormatHistory = [
+      { command: 'old command', timestamp: new Date().toISOString(), success: true }
+    ];
+    localStorage.setItem('nl-security-command-history', JSON.stringify(oldFormatHistory));
+
+    render(<App />);
+
+    // Verify history loads without errors
+    expect(screen.getByText(/command history/i)).toBeInTheDocument();
+    const historyContainer = screen.getByTestId('command-history');
+    expect(within(historyContainer).getByText('old command')).toBeInTheDocument();
+
+    // Verify old format items have null result/error
+    const stored = localStorage.getItem('nl-security-command-history');
+    const history = JSON.parse(stored);
+    expect(history[0].result).toBeNull();
+    expect(history[0].error).toBeNull();
+  });
+
+  test('clicking history item shows detailed view', async () => {
     const mockHistory = [
-      { command: 'arm the system', timestamp: new Date().toISOString(), success: true }
+      {
+        command: 'arm the system',
+        timestamp: new Date().toISOString(),
+        success: true,
+        result: {
+          text: 'arm the system',
+          interpretation: { intent: 'ARM_SYSTEM' },
+          api_call: { endpoint: '/api/arm-system' },
+          response: { success: true }
+        },
+        error: null
+      }
     ];
     localStorage.setItem('nl-security-command-history', JSON.stringify(mockHistory));
 
     render(<App />);
 
-    const textarea = screen.getByPlaceholderText('Enter your command...');
+    const { PLACEHOLDER_TEXT } = require('../utils/constants');
+    const textarea = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     
     // Find and click history item
     const historyItem = screen.getByTestId('history-item-0');
     fireEvent.click(historyItem);
 
-    // Verify command is populated in textarea
-    expect(textarea).toHaveValue('arm the system');
+    // Verify detailed view is shown
+    expect(screen.getByText('Command Details')).toBeInTheDocument();
+    expect(screen.getByText('Original Command')).toBeInTheDocument();
+    
+    // Scope query to detail view modal to avoid matching history item
+    const detailModal = screen.getByText('Command Details').closest('.history-detail-modal');
+    expect(within(detailModal).getByText('arm the system')).toBeInTheDocument();
+
+    // Verify command is NOT populated in textarea
+    expect(textarea).toHaveValue('');
   });
 
   test('limits history to MAX_HISTORY_ITEMS (10)', async () => {
@@ -250,7 +306,8 @@ describe('App', () => {
     localStorage.clear();
     render(<App />);
 
-    const textarea = screen.getByPlaceholderText('Enter your command...');
+    const { PLACEHOLDER_TEXT } = require('../utils/constants');
+    const textarea = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     const submitButton = screen.getByRole('button', { name: /execute command/i });
 
     // Execute 12 commands
@@ -271,5 +328,6 @@ describe('App', () => {
     // Oldest should be command 3 (commands 1 and 2 should be removed)
     expect(history[9].command).toBe('command 3');
   });
+
 });
 
