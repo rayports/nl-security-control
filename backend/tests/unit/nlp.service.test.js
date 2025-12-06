@@ -76,6 +76,34 @@ describe('nlp.service', () => {
       expect(result.entities.pin).toBe('1234');
       expect(result.entities.start_time).toBeInstanceOf(Date);
     });
+
+    test('should parse "add user John using passcode 1234"', () => {
+      const result = parseCommand('add user John using passcode 1234');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('John');
+      expect(result.entities.pin).toBe('1234');
+    });
+
+    test('should parse "add user Alice with passcode 5678"', () => {
+      const result = parseCommand('add user Alice with passcode 5678');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Alice');
+      expect(result.entities.pin).toBe('5678');
+    });
+
+    test('should parse "add user Bob passcode 9999"', () => {
+      const result = parseCommand('add user Bob passcode 9999');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Bob');
+      expect(result.entities.pin).toBe('9999');
+    });
+
+    test('should parse "add user Sarah 4321 passcode"', () => {
+      const result = parseCommand('add user Sarah 4321 passcode');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Sarah');
+      expect(result.entities.pin).toBe('4321');
+    });
   });
 
   describe('parseCommand - REMOVE_USER', () => {
