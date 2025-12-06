@@ -20,14 +20,16 @@ const parseCommand = (text) => {
     const namePatterns = [
       // "user named John" or "user called John" - captures just the name
       /user\s+(?:named|called)\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|,|$)/i,
-      // "add user John, she can..." or "add user John, he can..." - handles comma-separated format
+      // "add a temporary user Sarah," or "add user John, she can..." - handles comma-separated format
+      /(?:add|create)\s+(?:a\s+)?(?:temporary\s+|new\s+)?user\s+([A-Z][a-z]+)\s*,/i,
+      // "add user John, she can..." or "add user John, he can..." - handles comma-separated format (fallback)
       /(?:add|create)\s+user\s+([A-Z][a-z]+)\s*,/i,
       // "add user John using passcode" - specific pattern for "using" (check before generic pattern)
       /(?:add|create)\s+user\s+([A-Z][a-z]+)\s+using/i,
       // "add user Bob passcode" - specific pattern for passcode without "with" or "using"
       /(?:add|create)\s+user\s+([A-Z][a-z]+)\s+passcode/i,
-      // "add user John" or "create user Bob" - captures just the name before "with", "pin", "passcode", or "using"
-      /(?:add|create)\s+user\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|$)/i,
+      // "add a temporary user Sarah" or "add user John" - captures just the name before "with", "pin", "passcode", or "using"
+      /(?:add|create)\s+(?:a\s+)?(?:temporary\s+|new\s+)?user\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|,|$)/i,
       // "remove user John" - captures just the name
       /(?:remove|delete)\s+user\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|$)/i,
       // "add John with pin" or "remove John" - captures just the name
@@ -95,34 +97,55 @@ const parseCommand = (text) => {
 
   // Extract time expressions (for ADD_USER with time ranges)
   if (intent === 'ADD_USER') {
-    // Try to find time expressions in the text
-    // Look for patterns like "from 5pm", "until 10pm", "starting Monday", etc.
-    const timeKeywords = ['from', 'until', 'to', 'starting', 'beginning', 'end'];
-    const timeParts = text.split(/\s+/);
+    // First, try to match "from X to Y" pattern (most specific)
+    // Match "from <time1> to <time2>" where time expressions can contain spaces
+    const fromToPattern = /from\s+(.+?)\s+to\s+(.+?)(?:\s+with|\s+pin|\s+passcode|$)/i;
+    const fromToMatch = text.match(fromToPattern);
     
-    let timeStartIdx = -1;
-    let timeEndIdx = -1;
+    if (fromToMatch && fromToMatch[1] && fromToMatch[2]) {
+      const startTimeText = fromToMatch[1].trim();
+      const endTimeText = fromToMatch[2].trim();
+      
+      const parsedStartTime = parseTime(startTimeText);
+      const parsedEndTime = parseTime(endTimeText);
+      
+      if (parsedStartTime) {
+        entities.start_time = parsedStartTime;
+      }
+      if (parsedEndTime) {
+        entities.end_time = parsedEndTime;
+      }
+    } else {
+      // Fall back to existing logic for single time expressions
+      // Try to find time expressions in the text
+      // Look for patterns like "from 5pm", "until 10pm", "starting Monday", etc.
+      const timeKeywords = ['from', 'until', 'to', 'starting', 'beginning', 'end'];
+      const timeParts = text.split(/\s+/);
+      
+      let timeStartIdx = -1;
+      let timeEndIdx = -1;
 
-    for (let i = 0; i < timeParts.length; i++) {
-      const part = timeParts[i].toLowerCase();
-      if (timeKeywords.includes(part) && i + 1 < timeParts.length) {
-        const timeText = timeParts.slice(i).join(' ');
-        const parsedTime = parseTime(timeText);
-        if (parsedTime) {
-          if (part === 'from' || part === 'starting' || part === 'beginning') {
-            entities.start_time = parsedTime;
-          } else if (part === 'until' || part === 'to' || part === 'end') {
-            entities.end_time = parsedTime;
+      for (let i = 0; i < timeParts.length; i++) {
+        const part = timeParts[i].toLowerCase();
+        if (timeKeywords.includes(part) && i + 1 < timeParts.length) {
+          const timeText = timeParts.slice(i).join(' ');
+          const parsedTime = parseTime(timeText);
+          if (parsedTime) {
+            if (part === 'from' || part === 'starting' || part === 'beginning') {
+              entities.start_time = parsedTime;
+            } else if (part === 'until' || part === 'to' || part === 'end') {
+              entities.end_time = parsedTime;
+            }
           }
         }
       }
-    }
 
-    // Also try parsing the entire text for time expressions
-    if (!entities.start_time && !entities.end_time) {
-      const fullTime = parseTime(text);
-      if (fullTime) {
-        entities.start_time = fullTime;
+      // Also try parsing the entire text for time expressions
+      if (!entities.start_time && !entities.end_time) {
+        const fullTime = parseTime(text);
+        if (fullTime) {
+          entities.start_time = fullTime;
+        }
       }
     }
 

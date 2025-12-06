@@ -128,6 +128,17 @@ describe('nlp.service', () => {
       expect(result.entities.pin).toBe('1234');
       expect(result.entities.permissions).toEqual(['arm', 'disarm']);
     });
+
+    test('should parse "add a temporary user Sarah, pin 5678 from today 5pm to Sunday 10am"', () => {
+      const result = parseCommand('add a temporary user Sarah, pin 5678 from today 5pm to Sunday 10am');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Sarah');
+      expect(result.entities.pin).toBe('5678');
+      expect(result.entities.start_time).toBeDefined();
+      expect(result.entities.start_time).toBeInstanceOf(Date);
+      expect(result.entities.end_time).toBeDefined();
+      expect(result.entities.end_time).toBeInstanceOf(Date);
+    });
   });
 
   describe('parseCommand - REMOVE_USER', () => {

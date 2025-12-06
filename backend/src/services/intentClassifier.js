@@ -37,10 +37,10 @@ const classifyIntent = (text) => {
 
   // ADD_USER patterns
   const addUserPatterns = [
-    /add\s+(a\s+)?user/i,
-    /create\s+(a\s+)?user/i,
-    /^register\s+(a\s+)?user/i,
-    /\bregister\s+(a\s+)?user\b/i,
+    /add\s+(a\s+)?(?:temporary\s+|new\s+)?user/i,
+    /create\s+(a\s+)?(?:temporary\s+|new\s+)?user/i,
+    /^register\s+(a\s+)?(?:temporary\s+|new\s+)?user/i,
+    /\bregister\s+(a\s+)?(?:temporary\s+|new\s+)?user\b/i,
     /new\s+user/i
   ];
 
