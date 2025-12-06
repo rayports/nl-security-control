@@ -1,26 +1,32 @@
 import React from 'react';
 import './CommandInput.css';
 
-function CommandInput({ onSubmit, loading, disabled }) {
+function CommandInput({ value, onChange, onSubmit, loading, disabled }) {
   const handleSubmit = (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const text = formData.get('command');
-    if (onSubmit && text) {
+    const text = value?.trim() || '';
+    if (onSubmit && text && !loading) {
       onSubmit(text);
+    }
+  };
+
+  const handleChange = (e) => {
+    if (onChange) {
+      onChange(e.target.value);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="command-input">
       <textarea
-        name="command"
+        value={value || ''}
+        onChange={handleChange}
         placeholder="Enter your command..."
         disabled={disabled || loading}
         rows={3}
       />
-      <button type="submit" disabled={disabled || loading}>
-        {loading ? 'Processing...' : 'Submit'}
+      <button type="submit" disabled={disabled || loading || !value?.trim()}>
+        {loading ? 'Processing...' : 'Execute Command'}
       </button>
     </form>
   );

@@ -1,36 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import CommandInput from './components/CommandInput/CommandInput';
 import ResultsDisplay from './components/ResultsDisplay/ResultsDisplay';
 import ErrorDisplay from './components/ErrorDisplay/ErrorDisplay';
 import ExampleCommands from './components/ExampleCommands/ExampleCommands';
 import { sendCommand } from './services/api';
+import { exampleCommands } from './utils/constants';
 
 function App() {
-  // Temporarily expose sendCommand for testing in browser console
-  // Remove this after wiring up the UI
-  if (typeof window !== 'undefined') {
-    window.testSendCommand = sendCommand;
-  }
-  const exampleCommands = [
-    'arm the system',
-    'disarm the system',
-    'add user John with pin 1234',
-    'show me all users'
-  ];
+  const [commandText, setCommandText] = useState('');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleCommandSubmit = (text) => {
-    console.log('Command submitted:', text);
-    // TODO: Implement API call
+  const handleSubmit = async (text) => {
+    setError(null);
+    setResult(null);
+    setLoading(true);
+
+    try {
+      const response = await sendCommand(text);
+      setResult(response);
+      setError(null);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
+      setResult(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleCommandClick = (command) => {
-    console.log('Example command clicked:', command);
-    // TODO: Fill input with command
+  const handleCommandSelect = (command) => {
+    setCommandText(command);
+    setError(null);
   };
 
   const handleRetry = () => {
-    console.log('Retry clicked');
-    // TODO: Implement retry logic
+    if (commandText.trim()) {
+      handleSubmit(commandText);
+    }
   };
 
   return (
@@ -42,21 +50,23 @@ function App() {
       <main>
         <ExampleCommands
           commands={exampleCommands}
-          onCommandClick={handleCommandClick}
+          onCommandClick={handleCommandSelect}
         />
 
         <CommandInput
-          onSubmit={handleCommandSubmit}
-          loading={false}
+          value={commandText}
+          onChange={setCommandText}
+          onSubmit={handleSubmit}
+          loading={loading}
         />
 
         <ErrorDisplay
-          error={null}
+          error={error}
           onRetry={handleRetry}
         />
 
         <ResultsDisplay
-          result={null}
+          result={result}
         />
       </main>
     </div>
