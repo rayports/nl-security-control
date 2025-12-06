@@ -34,20 +34,21 @@ describe('user.service', () => {
     });
 
     test('should add user with optional fields', () => {
-      const startTime = new Date('2024-01-01');
-      const endTime = new Date('2024-12-31');
+      // Use future dates for temporary users
+      const startTime = new Date(Date.now() + 86400000); // Tomorrow
+      const endTime = new Date(Date.now() + 172800000); // Day after tomorrow
       const user = userService.addUser({
         name: 'Alice',
         pin: '9999',
         start_time: startTime,
         end_time: endTime,
-        permissions: ['admin', 'user']
+        permissions: ['arm', 'disarm']
       });
 
       expect(user.name).toBe('Alice');
       expect(user.start_time).toEqual(startTime);
       expect(user.end_time).toEqual(endTime);
-      expect(user.permissions).toEqual(['admin', 'user']);
+      expect(user.permissions).toEqual(['arm', 'disarm']);
     });
 
     test('should reject duplicate user by name', () => {
@@ -104,6 +105,72 @@ describe('user.service', () => {
       expect(() => {
         userService.addUser({ name: '', pin: '1234' });
       }).toThrow('Name is required and must be a non-empty string');
+    });
+
+    test('should reject start_time in the past', () => {
+      const pastTime = new Date(Date.now() - 86400000); // Yesterday
+      expect(() => {
+        userService.addUser({
+          name: 'John',
+          pin: '1234',
+          start_time: pastTime
+        });
+      }).toThrow('start_time must be in the future for temporary users');
+    });
+
+    test('should reject end_time in the past', () => {
+      const pastTime = new Date(Date.now() - 86400000); // Yesterday
+      expect(() => {
+        userService.addUser({
+          name: 'John',
+          pin: '1234',
+          end_time: pastTime
+        });
+      }).toThrow('end_time must be in the future for temporary users');
+    });
+
+    test('should reject start_time >= end_time', () => {
+      const startTime = new Date(Date.now() + 86400000); // Tomorrow
+      const endTime = new Date(Date.now() + 86400000); // Same time
+      
+      expect(() => {
+        userService.addUser({
+          name: 'John',
+          pin: '1234',
+          start_time: startTime,
+          end_time: endTime
+        });
+      }).toThrow('start_time must be before end_time');
+    });
+
+    test('should reject start_time after end_time', () => {
+      const startTime = new Date(Date.now() + 172800000); // Day after tomorrow
+      const endTime = new Date(Date.now() + 86400000); // Tomorrow
+      
+      expect(() => {
+        userService.addUser({
+          name: 'John',
+          pin: '1234',
+          start_time: startTime,
+          end_time: endTime
+        });
+      }).toThrow('start_time must be before end_time');
+    });
+
+    test('should accept valid future time range', () => {
+      const startTime = new Date(Date.now() + 86400000); // Tomorrow
+      const endTime = new Date(Date.now() + 172800000); // Day after tomorrow
+      
+      const user = userService.addUser({
+        name: 'John',
+        pin: '1234',
+        start_time: startTime,
+        end_time: endTime
+      });
+
+      expect(user.name).toBe('John');
+      expect(user.start_time).toEqual(startTime);
+      expect(user.end_time).toEqual(endTime);
     });
   });
 

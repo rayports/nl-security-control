@@ -96,6 +96,9 @@ describe('App', () => {
     // Verify button is no longer in loading state
     expect(screen.queryByRole('button', { name: /processing/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /execute command/i })).toBeInTheDocument();
+
+    // Verify input field is cleared after command execution
+    expect(textarea).toHaveValue('');
   });
 
   test('handles API error and displays error message', async () => {

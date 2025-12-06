@@ -147,6 +147,58 @@ describe('nlp.service', () => {
       expect(result.entities.pin).toBe('1234');
       expect(result.entities.permissions).toEqual(['arm', 'disarm']);
     });
+
+    test('should parse "add user John with pin 1234 from this weekend to next weekend"', () => {
+      const result = parseCommand('add user John with pin 1234 from this weekend to next weekend');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('John');
+      expect(result.entities.pin).toBe('1234');
+      expect(result.entities.start_time).toBeInstanceOf(Date);
+      expect(result.entities.end_time).toBeInstanceOf(Date);
+      expect(result.entities.start_time.getTime()).toBeLessThan(result.entities.end_time.getTime());
+      // Start should be a Saturday
+      expect(result.entities.start_time.getDay()).toBe(6);
+      // End should be a Sunday (end of next weekend)
+      expect(result.entities.end_time.getDay()).toBe(0);
+    });
+
+    test('should parse "add user Alice with pin 9999 until next tuesday 5pm"', () => {
+      const result = parseCommand('add user Alice with pin 9999 until next tuesday 5pm');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Alice');
+      expect(result.entities.pin).toBe('9999');
+      expect(result.entities.end_time).toBeInstanceOf(Date);
+      expect(result.entities.end_time.getTime()).toBeGreaterThan(Date.now());
+      // Should be a Tuesday
+      expect(result.entities.end_time.getDay()).toBe(2);
+      // Should be around 5pm (17:00)
+      expect(result.entities.end_time.getHours()).toBe(17);
+    });
+
+    test('should parse "add user Bob with pin 4321 this weekend"', () => {
+      const result = parseCommand('add user Bob with pin 4321 this weekend');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Bob');
+      expect(result.entities.pin).toBe('4321');
+      expect(result.entities.start_time).toBeInstanceOf(Date);
+      expect(result.entities.end_time).toBeInstanceOf(Date);
+      // Start should be Saturday
+      expect(result.entities.start_time.getDay()).toBe(6);
+      // End should be Sunday
+      expect(result.entities.end_time.getDay()).toBe(0);
+    });
+
+    test('should parse "add user Sarah with pin 5678 until next christmas"', () => {
+      const result = parseCommand('add user Sarah with pin 5678 until next christmas');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Sarah');
+      expect(result.entities.pin).toBe('5678');
+      expect(result.entities.end_time).toBeInstanceOf(Date);
+      expect(result.entities.end_time.getTime()).toBeGreaterThan(Date.now());
+      // Should be December 25
+      expect(result.entities.end_time.getMonth()).toBe(11); // 11 = December
+      expect(result.entities.end_time.getDate()).toBe(25);
+    });
   });
 
   describe('parseCommand - REMOVE_USER', () => {

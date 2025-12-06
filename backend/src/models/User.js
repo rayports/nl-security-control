@@ -19,6 +19,27 @@ const createUser = (data) => {
     throw new Error('end_time must be a Date object or null');
   }
 
+  // Validate time relationships
+  const now = new Date();
+  
+  // If both times are provided, validate start < end
+  if (start_time !== null && end_time !== null) {
+    if (start_time.getTime() >= end_time.getTime()) {
+      throw new Error('start_time must be before end_time');
+    }
+  }
+
+  // Validate that times are in the future (for temporary users)
+  // Only validate if at least one time is provided (indicating a temporary user)
+  if (start_time !== null || end_time !== null) {
+    if (start_time !== null && start_time.getTime() < now.getTime()) {
+      throw new Error('start_time must be in the future for temporary users');
+    }
+    if (end_time !== null && end_time.getTime() < now.getTime()) {
+      throw new Error('end_time must be in the future for temporary users');
+    }
+  }
+
   if (!Array.isArray(permissions)) {
     throw new Error('permissions must be an array');
   }

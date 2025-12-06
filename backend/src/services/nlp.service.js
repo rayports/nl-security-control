@@ -1,5 +1,5 @@
 const { classifyIntent } = require('./intentClassifier');
-const { parseTime } = require('../utils/timeParser');
+const { parseTime, parseWeekendRange } = require('../utils/timeParser');
 
 const parseCommand = (text) => {
   if (!text || typeof text !== 'string') {
@@ -132,54 +132,117 @@ const parseCommand = (text) => {
 
   // Extract time expressions (for ADD_USER with time ranges)
   if (intent === 'ADD_USER') {
-    // First, try to match "from X to Y" pattern (most specific)
-    // Match "from <time1> to <time2>" where time expressions can contain spaces
-    const fromToPattern = /from\s+(.+?)\s+to\s+(.+?)(?:\s+with|\s+pin|\s+passcode|$)/i;
-    const fromToMatch = text.match(fromToPattern);
+    // First, check if the text contains standalone "this weekend" or "next weekend"
+    // Extract the weekend phrase from the text (not part of "from X to Y")
+    const weekendMatch = text.match(/\b(this|next)\s+weekend\b/i);
+    if (weekendMatch && !text.match(/from\s+.*\s+to\s+.*weekend/i)) {
+      const weekendPhrase = weekendMatch[0].toLowerCase();
+      const weekendRange = parseWeekendRange(weekendPhrase);
+      if (weekendRange) {
+        entities.start_time = weekendRange.start;
+        entities.end_time = weekendRange.end;
+      }
+    }
     
-    if (fromToMatch && fromToMatch[1] && fromToMatch[2]) {
-      const startTimeText = fromToMatch[1].trim();
-      const endTimeText = fromToMatch[2].trim();
+    // If we didn't find a standalone weekend, continue with other patterns
+    if (!entities.start_time && !entities.end_time) {
+      // Try to match "from X to Y" pattern (most specific)
+      // Match "from <time1> to <time2>" where time expressions can contain spaces
+      // Enhanced to handle "from today 5pm to next tuesday 5pm", "from this weekend to next weekend", etc.
+      const fromToPattern = /from\s+(.+?)\s+to\s+(.+?)(?:\s+with|\s+pin|\s+passcode|$)/i;
+      const fromToMatch = text.match(fromToPattern);
       
-      const parsedStartTime = parseTime(startTimeText);
-      const parsedEndTime = parseTime(endTimeText);
-      
-      if (parsedStartTime) {
-        entities.start_time = parsedStartTime;
-      }
-      if (parsedEndTime) {
-        entities.end_time = parsedEndTime;
-      }
-    } else {
-      // Fall back to existing logic for single time expressions
-      // Try to find time expressions in the text
-      // Look for patterns like "from 5pm", "until 10pm", "starting Monday", etc.
-      const timeKeywords = ['from', 'until', 'to', 'starting', 'beginning', 'end'];
-      const timeParts = text.split(/\s+/);
-      
-      let timeStartIdx = -1;
-      let timeEndIdx = -1;
-
-      for (let i = 0; i < timeParts.length; i++) {
-        const part = timeParts[i].toLowerCase();
-        if (timeKeywords.includes(part) && i + 1 < timeParts.length) {
-          const timeText = timeParts.slice(i).join(' ');
-          const parsedTime = parseTime(timeText);
-          if (parsedTime) {
-            if (part === 'from' || part === 'starting' || part === 'beginning') {
-              entities.start_time = parsedTime;
-            } else if (part === 'until' || part === 'to' || part === 'end') {
+      if (fromToMatch && fromToMatch[1] && fromToMatch[2]) {
+        const startTimeText = fromToMatch[1].trim();
+        const endTimeText = fromToMatch[2].trim();
+        
+        // Check if either is a weekend range
+        const startWeekend = parseWeekendRange(startTimeText);
+        const endWeekend = parseWeekendRange(endTimeText);
+        
+        if (startWeekend) {
+          entities.start_time = startWeekend.start;
+        } else {
+          const parsedStartTime = parseTime(startTimeText);
+          if (parsedStartTime) {
+            entities.start_time = parsedStartTime;
+          }
+        }
+        
+        if (endWeekend) {
+          entities.end_time = endWeekend.end; // Use end of weekend range
+        } else {
+          const parsedEndTime = parseTime(endTimeText);
+          if (parsedEndTime) {
+            entities.end_time = parsedEndTime;
+          }
+        }
+      } else {
+        // Try standalone time expressions with keywords
+        // Look for patterns like "until next friday", "starting Monday", "from 5pm", etc.
+        const timeKeywords = ['from', 'until', 'to', 'starting', 'beginning', 'end'];
+        const lowerText = text.toLowerCase();
+        
+        // Check for "until <time>" or "to <time>" patterns
+        const untilPattern = /(?:until|to)\s+(.+?)(?:\s+with|\s+pin|\s+passcode|$)/i;
+        const untilMatch = text.match(untilPattern);
+        if (untilMatch && untilMatch[1]) {
+          const timeText = untilMatch[1].trim();
+          const weekend = parseWeekendRange(timeText);
+          if (weekend) {
+            entities.end_time = weekend.end;
+          } else {
+            const parsedTime = parseTime(timeText);
+            if (parsedTime) {
               entities.end_time = parsedTime;
             }
           }
         }
-      }
-
-      // Also try parsing the entire text for time expressions
-      if (!entities.start_time && !entities.end_time) {
-        const fullTime = parseTime(text);
-        if (fullTime) {
-          entities.start_time = fullTime;
+        
+        // Check for "from <time>" or "starting <time>" patterns
+        const fromPattern = /(?:from|starting|beginning)\s+(.+?)(?:\s+with|\s+pin|\s+passcode|$)/i;
+        const fromMatch = text.match(fromPattern);
+        if (fromMatch && fromMatch[1]) {
+          const timeText = fromMatch[1].trim();
+          const weekend = parseWeekendRange(timeText);
+          if (weekend) {
+            entities.start_time = weekend.start;
+          } else {
+            const parsedTime = parseTime(timeText);
+            if (parsedTime) {
+              entities.start_time = parsedTime;
+            }
+          }
+        }
+        
+        // If no specific time keywords found, try parsing standalone time expressions
+        // This handles cases like "add user John until next friday" (without "until" keyword)
+        if (!entities.start_time && !entities.end_time) {
+          // Look for time expressions that might be standalone
+          // Try parsing phrases that contain time-related words
+          const timePhrases = [
+            /(?:this|next)\s+weekend/i,
+            /(?:this|next)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i,
+            /(?:this|next)\s+christmas/i,
+            /(?:this|next)\s+thanksgiving/i,
+            /tomorrow/i,
+            /today\s+\d+pm/i,
+            /\d+pm/i
+          ];
+          
+          for (const phrase of timePhrases) {
+            const match = text.match(phrase);
+            if (match) {
+              const parsedTime = parseTime(match[0]);
+              if (parsedTime) {
+                // If we found a time but no start_time, use it as end_time (common pattern: "until X")
+                if (!entities.end_time) {
+                  entities.end_time = parsedTime;
+                }
+                break;
+              }
+            }
+          }
         }
       }
     }

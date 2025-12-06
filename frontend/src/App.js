@@ -70,6 +70,8 @@ function App() {
       addToHistory(text, false, null, errorMessage);
     } finally {
       setLoading(false);
+      // Clear the input field after command execution (success or failure)
+      setCommandText('');
     }
   };
 
