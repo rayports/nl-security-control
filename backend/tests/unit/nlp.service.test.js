@@ -139,6 +139,14 @@ describe('nlp.service', () => {
       expect(result.entities.end_time).toBeDefined();
       expect(result.entities.end_time).toBeInstanceOf(Date);
     });
+
+    test('should parse narrative command "My mother-in-law is coming to stay for the weekend, make sure she can arm and disarm our system using passcode 1234"', () => {
+      const result = parseCommand('My mother-in-law is coming to stay for the weekend, make sure she can arm and disarm our system using passcode 1234');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('mother-in-law');
+      expect(result.entities.pin).toBe('1234');
+      expect(result.entities.permissions).toEqual(['arm', 'disarm']);
+    });
   });
 
   describe('parseCommand - REMOVE_USER', () => {

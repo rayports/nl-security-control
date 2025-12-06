@@ -77,6 +77,16 @@ const classifyIntent = (text) => {
     return 'LIST_USERS';
   }
 
+  // Narrative ADD_USER detection: if text contains passcode/pin AND permissions but no explicit "add user"
+  // This is a heuristic for narrative commands like "My mother-in-law... make sure she can arm and disarm... using passcode 1234"
+  const hasPasscode = /(?:passcode|pin)\s+\d{4}/i.test(text);
+  const hasPermissions = /(?:can|able to)\s+(?:arm|disarm)/i.test(text);
+  const hasExplicitAddUser = addUserPatterns.some(pattern => pattern.test(lowerText));
+  
+  if (hasPasscode && hasPermissions && !hasExplicitAddUser) {
+    return 'ADD_USER';
+  }
+
   return null;
 };
 

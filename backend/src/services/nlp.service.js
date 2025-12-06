@@ -58,6 +58,41 @@ const parseCommand = (text) => {
         }
       }
     }
+
+    // Fallback name extraction heuristic for narrative commands
+    // When existing patterns don't find a clear name (or find an incorrect one like "system"),
+    // try to extract relationship terms from narrative text
+    // This handles cases like "My mother-in-law... make sure she can arm... using passcode 1234"
+    if (intent === 'ADD_USER') {
+      const relationshipTerms = [
+        'mother-in-law',
+        'father-in-law',
+        'mother',
+        'father',
+        'sister',
+        'brother',
+        'guest',
+        'visitor'
+      ];
+      
+      const lowerText = text.toLowerCase();
+      let foundRelationshipTerm = null;
+      
+      for (const term of relationshipTerms) {
+        // Look for "my <term>" or "<term>" patterns
+        const pattern = new RegExp(`(?:my\\s+)?${term.replace(/-/g, '\\-')}`, 'i');
+        if (pattern.test(lowerText)) {
+          foundRelationshipTerm = term;
+          break;
+        }
+      }
+      
+      // Override name if we found a relationship term (this handles narrative commands where
+      // existing patterns might incorrectly match words like "system" from "our system using passcode")
+      if (foundRelationshipTerm) {
+        entities.name = foundRelationshipTerm;
+      }
+    }
   }
 
   // Extract PIN (4-digit pattern) - supports both "pin" and "passcode"
