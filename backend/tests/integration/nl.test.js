@@ -1,6 +1,147 @@
+const request = require('supertest');
+const app = require('../../src/app');
+const store = require('../../src/storage/inMemoryStore');
+
 describe('NLP Routes', () => {
-  test('placeholder - should run', () => {
-    expect(true).toBe(true);
+  beforeEach(() => {
+    // Clear all users before each test
+    const users = store.getUsers();
+    users.forEach(user => {
+      store.removeUser(user.name);
+    });
+
+    // Reset system state to default
+    store.setSystemState({
+      armed: false,
+      mode: 'away'
+    });
+  });
+
+  describe('POST /nl/execute', () => {
+    test('should arm system via NL command', async () => {
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'arm the system' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.text).toBe('arm the system');
+      expect(response.body.interpretation.intent).toBe('ARM_SYSTEM');
+      expect(response.body.interpretation.entities.mode).toBe('away');
+
+      expect(response.body.api_call).toEqual({
+        endpoint: '/api/arm-system',
+        method: 'POST',
+        payload: { mode: 'away' }
+      });
+
+      expect(response.body.response.success).toBe(true);
+      expect(response.body.response.state.armed).toBe(true);
+      expect(response.body.response.state.mode).toBe('away');
+    });
+
+    test('should add user via NL command', async () => {
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'add user John with pin 4321' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.text).toBe('add user John with pin 4321');
+      expect(response.body.interpretation.intent).toBe('ADD_USER');
+      expect(response.body.interpretation.entities.name).toBe('John');
+      expect(response.body.interpretation.entities.pin).toBe('4321');
+
+      expect(response.body.api_call).toEqual({
+        endpoint: '/api/add-user',
+        method: 'POST',
+        payload: {
+          name: 'John',
+          pin: '4321',
+          start_time: undefined,
+          end_time: undefined,
+          permissions: []
+        }
+      });
+
+      expect(response.body.response.success).toBe(true);
+      expect(response.body.response.user.name).toBe('John');
+      expect(response.body.response.user.pin).toBe('****21'); // Masked PIN
+      expect(response.body.response.user.pin).not.toBe('4321'); // Should not be raw PIN
+    });
+
+    test('should remove user via NL command', async () => {
+      // Setup: Add a user first
+      await request(app)
+        .post('/nl/execute')
+        .send({ text: 'add user John with pin 4321' });
+
+      // Test: Remove the user
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'remove user John' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.text).toBe('remove user John');
+      expect(response.body.interpretation.intent).toBe('REMOVE_USER');
+      expect(response.body.interpretation.entities.name).toBe('John');
+
+      expect(response.body.api_call).toEqual({
+        endpoint: '/api/remove-user',
+        method: 'POST',
+        payload: {
+          identifier: 'John'
+        }
+      });
+
+      expect(response.body.response.success).toBe(true);
+      expect(response.body.response.user.name).toBe('John');
+      expect(response.body.response.user.pin).toBe('****21'); // Masked PIN
+
+      // Verify user is actually removed
+      const listResponse = await request(app).get('/api/list-users');
+      expect(listResponse.body.users).toHaveLength(0);
+    });
+
+    test('should list users via NL command', async () => {
+      // Setup: Add at least one user
+      await request(app)
+        .post('/nl/execute')
+        .send({ text: 'add user Alice with pin 5678' });
+
+      await request(app)
+        .post('/nl/execute')
+        .send({ text: 'add user Bob with pin 9999' });
+
+      // Test: List users
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'show me all users' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.text).toBe('show me all users');
+      expect(response.body.interpretation.intent).toBe('LIST_USERS');
+      expect(response.body.interpretation.entities).toEqual({});
+
+      expect(response.body.api_call).toEqual({
+        endpoint: '/api/list-users',
+        method: 'GET',
+        payload: {}
+      });
+
+      expect(response.body.response.success).toBe(true);
+      expect(response.body.response.users).toBeInstanceOf(Array);
+      expect(response.body.response.users.length).toBeGreaterThanOrEqual(2);
+
+      // Verify all PINs are masked
+      response.body.response.users.forEach(user => {
+        expect(user.pin).toMatch(/^\*\*\*\*\d{2}$/); // Format: ****XX
+        expect(user.pin).not.toMatch(/^[0-9]{4}$/); // Should not be raw 4-digit PIN
+      });
+
+      // Verify specific users are present
+      const userNames = response.body.response.users.map(u => u.name);
+      expect(userNames).toContain('Alice');
+      expect(userNames).toContain('Bob');
+    });
   });
 });
 
