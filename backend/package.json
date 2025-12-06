@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "jest"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -12,6 +13,9 @@
     "cors": "^2.8.5",
     "chrono-node": "^2.7.7",
     "supertest": "^6.3.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
 
