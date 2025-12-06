@@ -54,21 +54,23 @@ const classifyIntent = (text) => {
     /users?\s+list/i
   ];
 
-  // Check patterns in order of specificity (DISARM before ARM)
-  if (disarmPatterns.some(pattern => pattern.test(lowerText))) {
-    return 'DISARM_SYSTEM';
-  }
-
-  if (armPatterns.some(pattern => pattern.test(lowerText))) {
-    return 'ARM_SYSTEM';
+  // Check patterns in order of specificity
+  // ADD_USER and REMOVE_USER should be checked first to avoid matching "arm"/"disarm" in permission contexts
+  if (addUserPatterns.some(pattern => pattern.test(lowerText))) {
+    return 'ADD_USER';
   }
 
   if (removeUserPatterns.some(pattern => pattern.test(lowerText))) {
     return 'REMOVE_USER';
   }
 
-  if (addUserPatterns.some(pattern => pattern.test(lowerText))) {
-    return 'ADD_USER';
+  // DISARM before ARM to avoid matching "arm" in "disarm"
+  if (disarmPatterns.some(pattern => pattern.test(lowerText))) {
+    return 'DISARM_SYSTEM';
+  }
+
+  if (armPatterns.some(pattern => pattern.test(lowerText))) {
+    return 'ARM_SYSTEM';
   }
 
   if (listUsersPatterns.some(pattern => pattern.test(lowerText))) {

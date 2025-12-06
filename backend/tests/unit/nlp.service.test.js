@@ -104,6 +104,30 @@ describe('nlp.service', () => {
       expect(result.entities.name).toBe('Sarah');
       expect(result.entities.pin).toBe('4321');
     });
+
+    test('should parse "add user John, she can arm the system with pin 1234"', () => {
+      const result = parseCommand('add user John, she can arm the system with pin 1234');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('John');
+      expect(result.entities.pin).toBe('1234');
+      expect(result.entities.permissions).toEqual(['arm']);
+    });
+
+    test('should parse "add user John, he can disarm the system with pin 1234"', () => {
+      const result = parseCommand('add user John, he can disarm the system with pin 1234');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('John');
+      expect(result.entities.pin).toBe('1234');
+      expect(result.entities.permissions).toEqual(['disarm']);
+    });
+
+    test('should parse "add user John, make sure he can arm and disarm our system with pin 1234"', () => {
+      const result = parseCommand('add user John, make sure he can arm and disarm our system with pin 1234');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('John');
+      expect(result.entities.pin).toBe('1234');
+      expect(result.entities.permissions).toEqual(['arm', 'disarm']);
+    });
   });
 
   describe('parseCommand - REMOVE_USER', () => {

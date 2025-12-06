@@ -171,6 +171,35 @@ describe('NLP Routes', () => {
       expect(response.body.response.user.pin).toBe('****68'); // Masked PIN
       expect(response.body.response.user.pin).not.toBe('2468'); // Should not be raw PIN
     });
+
+    test('should add user with permissions via NL command', async () => {
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'add user Alice, she can arm and disarm the system with pin 5678' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.text).toBe('add user Alice, she can arm and disarm the system with pin 5678');
+      expect(response.body.interpretation.intent).toBe('ADD_USER');
+      expect(response.body.interpretation.entities.name).toBe('Alice');
+      expect(response.body.interpretation.entities.pin).toBe('5678');
+      expect(response.body.interpretation.entities.permissions).toEqual(['arm', 'disarm']);
+
+      expect(response.body.api_call).toEqual({
+        endpoint: '/api/add-user',
+        method: 'POST',
+        payload: {
+          name: 'Alice',
+          pin: '5678',
+          start_time: undefined,
+          end_time: undefined,
+          permissions: ['arm', 'disarm']
+        }
+      });
+
+      expect(response.body.response.success).toBe(true);
+      expect(response.body.response.user.name).toBe('Alice');
+      expect(response.body.response.user.pin).toBe('****78'); // Masked PIN
+    });
   });
 });
 

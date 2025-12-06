@@ -19,7 +19,9 @@ const parseCommand = (text) => {
     // Be careful to not capture "add user" or "remove user" as the name
     const namePatterns = [
       // "user named John" or "user called John" - captures just the name
-      /user\s+(?:named|called)\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|$)/i,
+      /user\s+(?:named|called)\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|,|$)/i,
+      // "add user John, she can..." or "add user John, he can..." - handles comma-separated format
+      /(?:add|create)\s+user\s+([A-Z][a-z]+)\s*,/i,
       // "add user John using passcode" - specific pattern for "using" (check before generic pattern)
       /(?:add|create)\s+user\s+([A-Z][a-z]+)\s+using/i,
       // "add user Bob passcode" - specific pattern for passcode without "with" or "using"
@@ -123,6 +125,32 @@ const parseCommand = (text) => {
         entities.start_time = fullTime;
       }
     }
+
+    // Extract permissions (for ADD_USER)
+    entities.permissions = [];
+    
+    // Patterns for permission extraction
+    // Check for "arm and disarm" or "disarm and arm" (both permissions)
+    const armAndDisarmPattern = /(?:can|able to)\s+(?:arm\s+and\s+disarm|disarm\s+and\s+arm)/i;
+    // Check for individual "can arm" or "able to arm"
+    const canArmPattern = /(?:can|able to)\s+arm(?!\s+and\s+disarm)/i;
+    // Check for individual "can disarm" or "able to disarm"
+    const canDisarmPattern = /(?:can|able to)\s+disarm(?!\s+and\s+arm)/i;
+    
+    // Check for both permissions first (more specific)
+    if (armAndDisarmPattern.test(text)) {
+      entities.permissions = ['arm', 'disarm'];
+    } else if (canArmPattern.test(text) && canDisarmPattern.test(text)) {
+      // Both mentioned separately
+      entities.permissions = ['arm', 'disarm'];
+    } else if (canArmPattern.test(text)) {
+      // Only arm permission
+      entities.permissions = ['arm'];
+    } else if (canDisarmPattern.test(text)) {
+      // Only disarm permission
+      entities.permissions = ['disarm'];
+    }
+    // Default: entities.permissions remains [] if no permissions mentioned
   }
 
   return {
