@@ -5,6 +5,8 @@ export const exampleCommands = [
   'disarm the system',
   'add user John with pin 4321',
   'show me all users',
+  'add a temporary user Sarah, pin 5678 from today 5pm to Sunday 10am',
+  'My mother-in-law is coming to stay for the weekend, make sure she can arm and disarm our system using passcode 1234',
   'remove user John'
 ];
 
