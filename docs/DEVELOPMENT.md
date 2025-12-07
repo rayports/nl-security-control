@@ -145,7 +145,7 @@ cd frontend && npm test -- --watchAll=false && cd ..
 cd e2e && npm test && cd ..
 ```
 
-See [TEST_VERIFICATION.md](../TEST_VERIFICATION.md) for detailed test verification steps.
+See [Test Verification Guide](guides/TEST_VERIFICATION.md) for detailed test verification steps.
 
 ---
 

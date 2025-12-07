@@ -268,5 +268,5 @@ Potential improvements for production:
 - **E2E Tests:** Test full user flows from UI to backend
 - **Test Coverage:** Comprehensive coverage of critical paths
 
-See [TEST_VERIFICATION.md](../TEST_VERIFICATION.md) for test execution details.
+See [Test Verification Guide](guides/TEST_VERIFICATION.md) for test execution details.
 

@@ -30,14 +30,18 @@ This system provides a natural language interface for managing a security system
 
 ## Quick Links
 
+### Technical Documentation
 - **[API Documentation](docs/API.md)** - Complete REST and NL endpoint reference
-- **[Development Guide](docs/DEVELOPMENT.md)** - How to run, test, and develop locally
 - **[Architecture](docs/ARCHITECTURE.md)** - Technical design, decisions, and limitations
 - **[Command Examples](docs/EXAMPLES.md)** - Natural language command examples
+- **[Development Guide](docs/DEVELOPMENT.md)** - How to run, test, and develop locally
 - **[LLM Integration Plan](docs/LLM_INTEGRATION_PLAN.md)** - Design plan for future LLM integration (not implemented)
-- **[Test Verification](TEST_VERIFICATION.md)** - How to verify the project with test suites
-- **[Requirements](docs/requirements.md)** - Original project requirements
 - **[Project Structure](docs/project_structure.md)** - Detailed project organization
+- **[Requirements](docs/requirements.md)** - Original project requirements
+
+### Guides
+- **[Reviewer Guide](docs/guides/REVIEWER_GUIDE.md)** - Step-by-step guide for reviewers
+- **[Test Verification](docs/guides/TEST_VERIFICATION.md)** - How to verify the project with test suites
 
 ## Tech Stack
 
@@ -93,7 +97,7 @@ nl-security-control/
 3. **Open the frontend:** http://localhost:3005
 4. **Try a command:** Type "arm the system" and click Execute
 
-For detailed setup instructions, see the [Development Guide](docs/DEVELOPMENT.md) or [Reviewer Guide](REVIEWER_GUIDE.md).
+For detailed setup instructions, see the [Development Guide](docs/DEVELOPMENT.md) or [Reviewer Guide](docs/guides/REVIEWER_GUIDE.md).
 
 ## Testing
 
@@ -110,7 +114,7 @@ cd frontend && npm test -- --watchAll=false
 cd e2e && npm test
 ```
 
-See [TEST_VERIFICATION.md](TEST_VERIFICATION.md) for detailed test verification steps.
+See [Test Verification Guide](docs/guides/TEST_VERIFICATION.md) for detailed test verification steps.
 
 ## Documentation
 

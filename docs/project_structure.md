@@ -5,8 +5,6 @@
 ```
 nl-security-control/
 ├── README.md
-├── TEST_VERIFICATION.md
-├── PROMPTS.md
 ├── docker-compose.yml
 ├── .gitignore
 ├── .env.example
@@ -17,8 +15,13 @@ nl-security-control/
 │   ├── DEVELOPMENT.md
 │   ├── EXAMPLES.md
 │   ├── LLM_INTEGRATION_PLAN.md
+│   ├── POTENTIAL_ISSUES.md
+│   ├── AI_WORKFLOW.md
 │   ├── project_structure.md
-│   └── requirements.md
+│   ├── requirements.md
+│   └── guides/
+│       ├── REVIEWER_GUIDE.md
+│       └── TEST_VERIFICATION.md
 │
 ├── backend/
 │   ├── Dockerfile
@@ -126,8 +129,6 @@ nl-security-control/
 | File | Purpose |
 |------|---------|
 | `README.md` | Main project documentation with overview, quickstart, and links to detailed docs |
-| `TEST_VERIFICATION.md` | Test verification guide using automated test suites |
-| `PROMPTS.md` | Development prompts used with AI coding assistants |
 | `docker-compose.yml` | Orchestrates backend and frontend services with proper networking, health checks, and volume mounts |
 | `.gitignore` | Excludes node_modules, .env files, build artifacts, logs, and OS-specific files |
 | `.env.example` | Template showing all required environment variables for the project |
@@ -141,8 +142,17 @@ nl-security-control/
 | `DEVELOPMENT.md` | Development guide: running locally, testing, troubleshooting |
 | `EXAMPLES.md` | Natural language command examples organized by intent |
 | `LLM_INTEGRATION_PLAN.md` | Design plan for future LLM integration (not implemented - maintains offline capability) |
+| `POTENTIAL_ISSUES.md` | Documented potential issues, priorities, and status |
+| `AI_WORKFLOW.md` | Documentation of prompts used with AI coding assistants |
 | `project_structure.md` | This file - detailed project structure and file descriptions |
 | `requirements.md` | Original project requirements and specifications |
+
+### Documentation Guides (`/docs/guides`)
+
+| File | Purpose |
+|------|---------|
+| `TEST_VERIFICATION.md` | Test verification guide using automated test suites |
+| `REVIEWER_GUIDE.md` | Step-by-step guide for reviewers to test and verify the project |
 
 ### Backend (`/backend`)
 

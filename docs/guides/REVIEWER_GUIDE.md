@@ -333,7 +333,7 @@ A: Modern browsers (Chrome, Firefox, Safari, Edge). E2E tests use Chromium.
 
 - **[API Documentation](docs/API.md)** - Complete API reference
 - **[Development Guide](docs/DEVELOPMENT.md)** - Detailed development instructions
-- **[Test Verification](TEST_VERIFICATION.md)** - Test execution guide
+- **[Test Verification](TEST_VERIFICATION.md)** - Test execution guide (same directory)
 - **[Architecture](docs/ARCHITECTURE.md)** - Technical design details
 - **[Command Examples](docs/EXAMPLES.md)** - Natural language command examples
 
