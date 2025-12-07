@@ -3,6 +3,7 @@ const router = express.Router();
 const { parseCommand } = require('../services/nlp.service');
 const userService = require('../services/user.service');
 const systemService = require('../services/system.service');
+const { maskPinForResponse, maskPinForLog } = require('../utils/pinMasker');
 
 router.post('/execute', async (req, res, next) => {
   try {
@@ -58,7 +59,7 @@ router.post('/execute', async (req, res, next) => {
           method: 'POST',
           payload: {
             name: entities.name,
-            pin: entities.pin,
+            pin: maskPinForResponse(entities.pin), // Mask PIN in response
             start_time: entities.start_time,
             end_time: entities.end_time,
             permissions: entities.permissions || []
@@ -85,7 +86,7 @@ router.post('/execute', async (req, res, next) => {
         // Build payload matching PDF spec: { name } OR { pin }
         const removePayload = entities.name 
           ? { name: entities.name }
-          : { pin: entities.pin };
+          : { pin: maskPinForResponse(entities.pin) }; // Mask PIN in response
         
         apiCall = {
           endpoint: '/api/remove-user',
@@ -116,11 +117,17 @@ router.post('/execute', async (req, res, next) => {
         return next(error);
     }
 
+    // Mask PIN in entities before returning
+    const maskedEntities = { ...entities };
+    if (maskedEntities.pin) {
+      maskedEntities.pin = maskPinForResponse(maskedEntities.pin);
+    }
+
     res.json({
       text,
       interpretation: {
         intent,
-        entities
+        entities: maskedEntities
       },
       api_call: apiCall,
       response

@@ -35,9 +35,20 @@ This system provides a natural language interface for managing a security system
 - **Security System Control**: Arm/disarm system in different modes (away, home, stay)
 - **User Management**: Add, remove, and list users with PIN-based access
 - **Command History**: Click any command in the history to view detailed interpretation, API call, and response
-- **PIN Masking**: Automatic PIN masking for security (e.g., `****21` instead of `4321`)
+- **PIN Masking**: Automatic PIN masking in API responses (e.g., `****21` instead of `4321`)
 - **Structured Logging**: Request correlation IDs for tracing
 - **Comprehensive Testing**: Unit, integration, and E2E tests
+
+### Important Limitations
+
+This is a demonstration project with the following limitations:
+- **No persistence** - Data is lost on restart (in-memory storage)
+- **No authentication** - No user authentication/authorization
+- **Name uniqueness required** - User names must be unique (storage model limitation)
+- **Rule-based NLP** - May not handle all command variations
+- **No scheduling** - Cannot schedule commands for future execution
+
+See [Architecture Documentation](docs/ARCHITECTURE.md#limitations) for complete details.
 
 ## Quick Links
 

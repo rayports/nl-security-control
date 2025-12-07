@@ -48,14 +48,14 @@ describe('NLP Routes', () => {
       expect(response.body.text).toBe('add user John with pin 4321');
       expect(response.body.interpretation.intent).toBe('ADD_USER');
       expect(response.body.interpretation.entities.name).toBe('John');
-      expect(response.body.interpretation.entities.pin).toBe('4321');
+      expect(response.body.interpretation.entities.pin).toBe('****21'); // Masked PIN
 
       expect(response.body.api_call).toEqual({
         endpoint: '/api/add-user',
         method: 'POST',
         payload: {
           name: 'John',
-          pin: '4321',
+          pin: '****21', // Masked PIN
           start_time: undefined,
           end_time: undefined,
           permissions: []
@@ -152,14 +152,14 @@ describe('NLP Routes', () => {
       expect(response.body.text).toBe('add user Charlie with passcode 2468');
       expect(response.body.interpretation.intent).toBe('ADD_USER');
       expect(response.body.interpretation.entities.name).toBe('Charlie');
-      expect(response.body.interpretation.entities.pin).toBe('2468');
+      expect(response.body.interpretation.entities.pin).toBe('****68'); // Masked PIN
 
       expect(response.body.api_call).toEqual({
         endpoint: '/api/add-user',
         method: 'POST',
         payload: {
           name: 'Charlie',
-          pin: '2468',
+          pin: '****68', // Masked PIN
           start_time: undefined,
           end_time: undefined,
           permissions: []
@@ -181,7 +181,7 @@ describe('NLP Routes', () => {
       expect(response.body.text).toBe('add user Alice, she can arm and disarm the system with pin 5678');
       expect(response.body.interpretation.intent).toBe('ADD_USER');
       expect(response.body.interpretation.entities.name).toBe('Alice');
-      expect(response.body.interpretation.entities.pin).toBe('5678');
+      expect(response.body.interpretation.entities.pin).toBe('****78'); // Masked PIN
       expect(response.body.interpretation.entities.permissions).toEqual(['arm', 'disarm']);
 
       expect(response.body.api_call).toEqual({
@@ -189,7 +189,7 @@ describe('NLP Routes', () => {
         method: 'POST',
         payload: {
           name: 'Alice',
-          pin: '5678',
+          pin: '****78', // Masked PIN
           start_time: undefined,
           end_time: undefined,
           permissions: ['arm', 'disarm']

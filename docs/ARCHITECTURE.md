@@ -157,9 +157,11 @@ Technical design, decisions, and limitations of the Natural Language Security Co
 - Different masking levels for logs vs. API responses
 
 **Implementation:**
-- `maskPinForResponse()`: Shows last 2 digits (e.g., `****21`)
-- `maskPinForLog()`: Fully masks for logs (e.g., `****`)
-- Applied automatically in all API responses and logs
+- `maskPinForResponse()`: Shows last 2 digits (e.g., `****21`) - used in API responses
+- `maskPinForLog()`: Fully masks for logs (e.g., `****`) - used in structured log fields
+- Applied automatically in API response data (`response.user.pin`)
+- Applied in structured log fields (e.g., request body `pin` field)
+- **Note:** PINs within text strings (e.g., `/nl/execute` request body `{ text: "add user John with pin 4321" }`) are not masked in logs, as they're part of the user's original command text
 
 ### Command History with Detail View
 
@@ -213,7 +215,7 @@ Technical design, decisions, and limitations of the Natural Language Security Co
 
 ## Security Considerations
 
-- **PIN Masking:** PINs are masked in all API responses and logs
+- **PIN Masking:** PINs are masked in API response data (`response.user.pin` shows `****34`). PINs in structured log fields are masked, but PINs within text strings in request bodies are not masked.
 - **No Authentication:** No user authentication/authorization (for demo purposes)
 - **CORS:** Enabled for frontend-backend communication
 - **Input Validation:** Basic validation on critical endpoints
