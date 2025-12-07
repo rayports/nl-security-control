@@ -368,5 +368,21 @@ Commands that will return an error:
 4. **Check permissions:** Specify permissions when adding users (e.g., "can arm", "can disarm")
 5. **Time ranges:** Use natural time expressions (e.g., "today 5pm", "next Tuesday", "this weekend")
 
+## Viewing Command Details in the UI
+
+After executing any command in the frontend:
+
+1. The command appears in the command history below the input field
+2. **Click on any command** in the history to open a detailed view
+3. The detail view shows:
+   - Original command text
+   - NLP interpretation (intent and extracted entities)
+   - API call details (endpoint, method, payload)
+   - Full API response or error message
+
+This makes it easy to understand how the system processes each command and what API calls are made behind the scenes.
+
+---
+
 For more details, see [API Documentation](API.md).
 

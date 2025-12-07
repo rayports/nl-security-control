@@ -25,6 +25,15 @@ docker compose down
 
 The frontend will be available at `http://localhost:3005` and the backend at `http://localhost:8080`.
 
+**UI Features:**
+- Enter commands in the text input and click "Execute Command"
+- View command history below the input (shows success/error indicators)
+- **Click any command in the history** to see detailed information:
+  - Original command text
+  - NLP interpretation (intent and extracted entities)
+  - API call details (endpoint, method, payload)
+  - Full API response or error message
+
 ---
 
 ## Running Locally (Without Docker)
@@ -145,7 +154,7 @@ cd frontend && npm test -- --watchAll=false && cd ..
 cd e2e && npm test && cd ..
 ```
 
-See [Test Verification Guide](guides/TEST_VERIFICATION.md) for detailed test verification steps.
+For detailed testing instructions, see [Usage Guide](guides/USAGE_GUIDE.md).
 
 ---
 

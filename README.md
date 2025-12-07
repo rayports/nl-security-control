@@ -24,6 +24,7 @@ This system provides a natural language interface for managing a security system
 - **Natural Language Processing**: Rule-based intent classification and entity extraction
 - **Security System Control**: Arm/disarm system in different modes (away, home, stay)
 - **User Management**: Add, remove, and list users with PIN-based access
+- **Command History**: Click any command in the history to view detailed interpretation, API call, and response
 - **PIN Masking**: Automatic PIN masking for security (e.g., `****21` instead of `4321`)
 - **Structured Logging**: Request correlation IDs for tracing
 - **Comprehensive Testing**: Unit, integration, and E2E tests
@@ -38,10 +39,10 @@ This system provides a natural language interface for managing a security system
 - **[LLM Integration Plan](docs/LLM_INTEGRATION_PLAN.md)** - Design plan for future LLM integration (not implemented)
 - **[Project Structure](docs/project_structure.md)** - Detailed project organization
 - **[Requirements](docs/requirements.md)** - Original project requirements
+- **[AI Workflow](docs/AI_WORKFLOW.md)** - Documentation of AI-assisted development approach
 
 ### Guides
-- **[Reviewer Guide](docs/guides/REVIEWER_GUIDE.md)** - Step-by-step guide for reviewers
-- **[Test Verification](docs/guides/TEST_VERIFICATION.md)** - How to verify the project with test suites
+- **[Usage Guide](docs/guides/USAGE_GUIDE.md)** - Running, testing, and using the system
 
 ## Tech Stack
 
@@ -96,8 +97,9 @@ nl-security-control/
    ```
 3. **Open the frontend:** http://localhost:3005
 4. **Try a command:** Type "arm the system" and click Execute
+5. **View details:** Click any command in the history to see the full interpretation, API call details, and response
 
-For detailed setup instructions, see the [Development Guide](docs/DEVELOPMENT.md) or [Reviewer Guide](docs/guides/REVIEWER_GUIDE.md).
+For detailed setup and usage instructions, see the [Usage Guide](docs/guides/USAGE_GUIDE.md).
 
 ## Testing
 
@@ -114,14 +116,15 @@ cd frontend && npm test -- --watchAll=false
 cd e2e && npm test
 ```
 
-See [Test Verification Guide](docs/guides/TEST_VERIFICATION.md) for detailed test verification steps.
+See [Usage Guide](docs/guides/USAGE_GUIDE.md) for detailed testing instructions.
 
 ## Documentation
 
-- **[API Documentation](docs/API.md)** - Complete API reference with request/response examples
-- **[Development Guide](docs/DEVELOPMENT.md)** - Local development, testing, and troubleshooting
-- **[Architecture](docs/ARCHITECTURE.md)** - Design decisions, tech stack, and limitations
-- **[Command Examples](docs/EXAMPLES.md)** - Natural language command variations and examples
+See the [Quick Links](#quick-links) section above for all documentation. Key documents include:
+- **[Usage Guide](docs/guides/USAGE_GUIDE.md)** - Running, testing, and using the system
+- **[API Documentation](docs/API.md)** - Complete API reference
+- **[Development Guide](docs/DEVELOPMENT.md)** - Local development details
+- **[AI Workflow](docs/AI_WORKFLOW.md)** - AI-assisted development approach
 
 ## License
 

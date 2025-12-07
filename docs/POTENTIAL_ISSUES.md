@@ -129,7 +129,7 @@ lsof -i :8080
 - Tests timeout
 
 **Solution:**
-- Clear documentation in docs/guides/TEST_VERIFICATION.md
+- Clear documentation in docs/guides/USAGE_GUIDE.md
 - Add check in E2E test setup
 - Provide clear error message if services aren't running
 
@@ -178,7 +178,7 @@ lsof -i :8080
 - Provide instructions for pre-downloading dependencies
 - Note that after initial setup, everything works offline
 
-**Status:** Documented in docs/guides/REVIEWER_GUIDE.md.
+**Status:** Documented in docs/guides/USAGE_GUIDE.md.
 
 ---
 

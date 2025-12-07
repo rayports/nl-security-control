@@ -20,8 +20,7 @@ nl-security-control/
 │   ├── project_structure.md
 │   ├── requirements.md
 │   └── guides/
-│       ├── REVIEWER_GUIDE.md
-│       └── TEST_VERIFICATION.md
+│       └── USAGE_GUIDE.md
 │
 ├── backend/
 │   ├── Dockerfile
@@ -151,8 +150,7 @@ nl-security-control/
 
 | File | Purpose |
 |------|---------|
-| `TEST_VERIFICATION.md` | Test verification guide using automated test suites |
-| `REVIEWER_GUIDE.md` | Step-by-step guide for reviewers to test and verify the project |
+| `USAGE_GUIDE.md` | Complete guide for running, testing, and using the system (includes UI usage, clickable history, and test instructions) |
 
 ### Backend (`/backend`)
 
