@@ -76,6 +76,14 @@ nl-security-control/
 
 ## Getting Started
 
+### Prerequisites
+
+- **Docker** and **Docker Compose** installed and running
+- **Node.js 18+** (for running tests locally)
+- **Ports 8080 and 3005 available**
+
+### Quick Start
+
 1. **Clone the repository**
 2. **Start the services:**
    ```bash
@@ -84,7 +92,7 @@ nl-security-control/
 3. **Open the frontend:** http://localhost:3005
 4. **Try a command:** Type "arm the system" and click Execute
 
-For detailed setup instructions, see the [Development Guide](docs/DEVELOPMENT.md).
+For detailed setup instructions, see the [Development Guide](docs/DEVELOPMENT.md) or [Reviewer Guide](REVIEWER_GUIDE.md).
 
 ## Testing
 

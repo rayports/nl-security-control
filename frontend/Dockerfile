@@ -28,9 +28,10 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Expose port
 EXPOSE 3005
 
-# Health check (optional)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:3005/health || exit 1
+# Health check (optional) - removed to avoid dependency on curl/wget
+# If health checks are needed, install curl in runtime stage or use nginx status module
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+#   CMD curl -f http://localhost:3005/ || exit 1
 
 # nginx runs automatically via default CMD
 
