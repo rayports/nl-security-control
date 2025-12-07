@@ -5,9 +5,19 @@
 ```
 nl-security-control/
 ├── README.md
+├── TEST_VERIFICATION.md
+├── PROMPTS.md
 ├── docker-compose.yml
 ├── .gitignore
 ├── .env.example
+│
+├── docs/
+│   ├── API.md
+│   ├── ARCHITECTURE.md
+│   ├── DEVELOPMENT.md
+│   ├── EXAMPLES.md
+│   ├── project_structure.md
+│   └── requirements.md
 │
 ├── backend/
 │   ├── Dockerfile
@@ -24,8 +34,7 @@ nl-security-control/
 │   │   ├── middleware/
 │   │   │   ├── errorHandler.js
 │   │   │   ├── correlationId.js
-│   │   │   ├── requestLogger.js
-│   │   │   └── validator.js
+│   │   │   └── requestLogger.js
 │   │   ├── models/
 │   │   │   ├── User.js
 │   │   │   └── SystemState.js
@@ -42,7 +51,8 @@ nl-security-control/
 │   │   ├── utils/
 │   │   │   ├── logger.js
 │   │   │   ├── pinMasker.js
-│   │   │   └── timeParser.js
+│   │   │   ├── timeParser.js
+│   │   │   └── commandAliases.js
 │   │   └── storage/
 │   │       └── inMemoryStore.js
 │   │
@@ -58,8 +68,6 @@ nl-security-control/
 │       │   ├── api.test.js
 │       │   ├── nl.test.js
 │       │   └── health.test.js
-│       └── fixtures/
-│           └── testCommands.js
 │
 ├── frontend/
 │   ├── Dockerfile
@@ -116,10 +124,23 @@ nl-security-control/
 
 | File | Purpose |
 |------|---------|
-| `README.md` | Complete documentation with TL;DR, setup instructions, architecture overview, API documentation, testing guide, and example commands |
+| `README.md` | Main project documentation with overview, quickstart, and links to detailed docs |
+| `TEST_VERIFICATION.md` | Test verification guide using automated test suites |
+| `PROMPTS.md` | Development prompts used with AI coding assistants |
 | `docker-compose.yml` | Orchestrates backend and frontend services with proper networking, health checks, and volume mounts |
 | `.gitignore` | Excludes node_modules, .env files, build artifacts, logs, and OS-specific files |
 | `.env.example` | Template showing all required environment variables for the project |
+
+### Documentation (`/docs`)
+
+| File | Purpose |
+|------|---------|
+| `API.md` | Complete API reference with request/response examples for all endpoints |
+| `ARCHITECTURE.md` | Technical design, decisions, limitations, and future enhancements |
+| `DEVELOPMENT.md` | Development guide: running locally, testing, troubleshooting |
+| `EXAMPLES.md` | Natural language command examples organized by intent |
+| `project_structure.md` | This file - detailed project structure and file descriptions |
+| `requirements.md` | Original project requirements and specifications |
 
 ### Backend (`/backend`)
 
@@ -153,7 +174,6 @@ nl-security-control/
 | `errorHandler.js` | Global error handler - catches all errors and formats consistent JSON responses |
 | `correlationId.js` | Generates unique correlation ID per request for distributed tracing |
 | `requestLogger.js` | Logs all incoming requests and outgoing responses with correlation ID |
-| `validator.js` | Input validation middleware factory - validates request bodies against schemas |
 
 #### Models (`/src/models`)
 
@@ -187,6 +207,7 @@ nl-security-control/
 | `logger.js` | Winston logger setup with structured JSON logging and correlation ID support |
 | `pinMasker.js` | PIN masking utilities - masks PINs in logs (****) and responses (****34) |
 | `timeParser.js` | Natural language time parsing using chrono-node - handles "today 5pm", "next Tuesday", etc. |
+| `commandAliases.js` | Command alias mapping - maps creative phrases (e.g., "sesame open") to standard intents |
 
 #### Storage (`/src/storage`)
 
@@ -215,11 +236,6 @@ nl-security-control/
 | `nl.test.js` | HTTP tests for /nl/execute with all example commands |
 | `health.test.js` | Tests for /healthz endpoint |
 
-##### Fixtures (`/tests/fixtures`)
-
-| File | Purpose |
-|------|---------|
-| `testCommands.js` | Test data - all 8+ example commands with expected outputs |
 
 ### Frontend (`/frontend`)
 
@@ -258,25 +274,25 @@ nl-security-control/
 | `CommandInput.js` | Text input and submit button component with loading state |
 | `CommandInput.css` | Styles for input field and button |
 
-##### ResultsDisplay (`/src/components/ResultsDisplay`)
+##### CommandHistory (`/src/components/CommandHistory`)
 
 | File | Purpose |
 |------|---------|
-| `ResultsDisplay.js` | Displays user input, NLP interpretation, API call details, and response |
-| `ResultsDisplay.css` | Styles for results sections |
+| `CommandHistory.js` | Displays list of previously executed commands with success/error indicators |
+| `CommandHistory.css` | Styles for history list and items |
 
-##### ExampleCommands (`/src/components/ExampleCommands`)
+##### HistoryDetailView (`/src/components/HistoryDetailView`)
 
 | File | Purpose |
 |------|---------|
-| `ExampleCommands.js` | Shows clickable example commands (bonus feature) |
-| `ExampleCommands.css` | Styles for example command buttons |
+| `HistoryDetailView.js` | Modal component showing detailed view of a selected history item (command, interpretation, API call, response) |
+| `HistoryDetailView.css` | Styles for detail view modal |
 
 ##### ErrorDisplay (`/src/components/ErrorDisplay`)
 
 | File | Purpose |
 |------|---------|
-| `ErrorDisplay.js` | Error message display with retry option |
+| `ErrorDisplay.js` | Error message display component |
 | `ErrorDisplay.css` | Error styling (red borders, warning icons) |
 
 #### Services (`/src/services`)
@@ -295,7 +311,8 @@ nl-security-control/
 
 | File | Purpose |
 |------|---------|
-| `App.test.js` | Basic React component tests |
+| `App.test.js` | React component tests for App (rendering, state management, history) |
+| `HistoryDetailView.test.js` | React component tests for HistoryDetailView modal |
 
 ### E2E Tests (`/e2e`)
 
@@ -310,17 +327,13 @@ nl-security-control/
 
 | File | Purpose |
 |------|---------|
+| `smoke.spec.js` | E2E smoke test: Verifies UI renders correctly |
 | `arm-system.spec.js` | E2E test: User arms system via NL command |
 | `disarm-system.spec.js` | E2E test: User disarms system via NL command |
-| `add-user.spec.js` | E2E test: User adds new user with PIN |
+| `add-user-and-list.spec.js` | E2E test: User adds new user and lists users with masked PINs |
 | `remove-user.spec.js` | E2E test: User removes existing user |
-| `list-users.spec.js` | E2E test: User lists all users with masked PINs |
-
-#### Fixtures (`/fixtures`)
-
-| File | Purpose |
-|------|---------|
-| `commands.json` | Test data for E2E scenarios |
+| `invalid-command.spec.js` | E2E test: Error handling for invalid commands |
+| `command-history.spec.js` | E2E test: Command history display and detail view |
 
 ## Architecture Overview
 
@@ -383,7 +396,7 @@ nl-security-control/
 - **Storage Layer**: In-memory data persistence
 
 ### 2. Middleware Pipeline
-Requests flow through: `Correlation ID → Logger → Validator → Routes → Error Handler`
+Requests flow through: `Correlation ID → Logger → Routes → Error Handler`
 
 ### 3. Separation of Concerns
 - **Intent Classification**: Separate from entity extraction
