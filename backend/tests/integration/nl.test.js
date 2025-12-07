@@ -200,6 +200,90 @@ describe('NLP Routes', () => {
       expect(response.body.response.user.name).toBe('Alice');
       expect(response.body.response.user.pin).toBe('****78'); // Masked PIN
     });
+
+    test('should disarm system via alias command "sesame open"', async () => {
+      // First arm the system
+      await request(app)
+        .post('/nl/execute')
+        .send({ text: 'arm the system' });
+
+      // Then disarm using alias
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'sesame open' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.text).toBe('sesame open');
+      expect(response.body.interpretation.intent).toBe('DISARM_SYSTEM');
+      expect(response.body.api_call.endpoint).toBe('/api/disarm-system');
+      expect(response.body.response.success).toBe(true);
+      expect(response.body.response.state.armed).toBe(false);
+    });
+
+    test('should arm system via alias command "sesame close"', async () => {
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'sesame close' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.text).toBe('sesame close');
+      expect(response.body.interpretation.intent).toBe('ARM_SYSTEM');
+      expect(response.body.api_call.endpoint).toBe('/api/arm-system');
+      expect(response.body.response.success).toBe(true);
+      expect(response.body.response.state.armed).toBe(true);
+    });
+
+    test('should disarm system via alias command "unlock"', async () => {
+      // First arm the system
+      await request(app)
+        .post('/nl/execute')
+        .send({ text: 'arm the system' });
+
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'unlock' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.interpretation.intent).toBe('DISARM_SYSTEM');
+      expect(response.body.response.state.armed).toBe(false);
+    });
+
+    test('should list users via alias command "who is here"', async () => {
+      // Add a user first
+      await request(app)
+        .post('/nl/execute')
+        .send({ text: 'add user Bob with pin 1234' });
+
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'who is here' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.interpretation.intent).toBe('LIST_USERS');
+      expect(response.body.api_call.endpoint).toBe('/api/list-users');
+      expect(response.body.response.success).toBe(true);
+      expect(response.body.response.users).toBeInstanceOf(Array);
+      expect(response.body.response.users.length).toBeGreaterThan(0);
+      // Verify PINs are masked
+      response.body.response.users.forEach(user => {
+        expect(user.pin).toMatch(/^\*\*\*\*\d{2}$/);
+      });
+    });
+
+    test('should handle alias within longer sentence "please sesame open"', async () => {
+      // First arm the system
+      await request(app)
+        .post('/nl/execute')
+        .send({ text: 'arm the system' });
+
+      const response = await request(app)
+        .post('/nl/execute')
+        .send({ text: 'please sesame open' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.interpretation.intent).toBe('DISARM_SYSTEM');
+      expect(response.body.response.state.armed).toBe(false);
+    });
   });
 });
 

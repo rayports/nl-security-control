@@ -199,6 +199,103 @@ describe('nlp.service', () => {
       expect(result.entities.end_time.getMonth()).toBe(11); // 11 = December
       expect(result.entities.end_time.getDate()).toBe(25);
     });
+
+    test('should parse "add John 1234" (without "user" keyword)', () => {
+      const result = parseCommand('add John 1234');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('John');
+      expect(result.entities.pin).toBe('1234');
+    });
+
+    test('should parse "register Alice 5678"', () => {
+      const result = parseCommand('register Alice 5678');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Alice');
+      expect(result.entities.pin).toBe('5678');
+    });
+
+    test('should parse "add Bob with pin 9999"', () => {
+      const result = parseCommand('add Bob with pin 9999');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Bob');
+      expect(result.entities.pin).toBe('9999');
+    });
+
+    test('should parse "register Sarah" (name only, no PIN)', () => {
+      const result = parseCommand('register Sarah');
+      expect(result.intent).toBe('ADD_USER');
+      expect(result.entities.name).toBe('Sarah');
+      // PIN might not be extracted if not provided
+    });
+  });
+
+  describe('parseCommand - REMOVE_USER edge cases', () => {
+    test('should parse "remove by pin 1234"', () => {
+      const result = parseCommand('remove by pin 1234');
+      expect(result.intent).toBe('REMOVE_USER');
+      expect(result.entities.pin).toBe('1234');
+    });
+
+    test('should parse "remove by passcode 5678"', () => {
+      const result = parseCommand('remove by passcode 5678');
+      expect(result.intent).toBe('REMOVE_USER');
+      expect(result.entities.pin).toBe('5678');
+    });
+
+    test('should parse "delete by pin 9999"', () => {
+      const result = parseCommand('delete by pin 9999');
+      expect(result.intent).toBe('REMOVE_USER');
+      expect(result.entities.pin).toBe('9999');
+    });
+
+    test('should parse "unregister John"', () => {
+      const result = parseCommand('unregister John');
+      expect(result.intent).toBe('REMOVE_USER');
+      expect(result.entities.name).toBe('John');
+    });
+  });
+
+  describe('parseCommand - ARM_SYSTEM edge cases', () => {
+    test('should parse "arm it"', () => {
+      const result = parseCommand('arm it');
+      expect(result.intent).toBe('ARM_SYSTEM');
+      expect(result.entities.mode).toBe('away'); // Default mode
+    });
+
+    test('should parse "set to away mode"', () => {
+      const result = parseCommand('set to away mode');
+      expect(result.intent).toBe('ARM_SYSTEM');
+      expect(result.entities.mode).toBe('away');
+    });
+
+    test('should parse "home mode"', () => {
+      const result = parseCommand('home mode');
+      expect(result.intent).toBe('ARM_SYSTEM');
+      expect(result.entities.mode).toBe('home');
+    });
+
+    test('should parse "stay mode"', () => {
+      const result = parseCommand('stay mode');
+      expect(result.intent).toBe('ARM_SYSTEM');
+      expect(result.entities.mode).toBe('stay');
+    });
+  });
+
+  describe('parseCommand - LIST_USERS edge cases', () => {
+    test('should parse "show users"', () => {
+      const result = parseCommand('show users');
+      expect(result.intent).toBe('LIST_USERS');
+    });
+
+    test('should parse "who\'s registered"', () => {
+      const result = parseCommand('who\'s registered');
+      expect(result.intent).toBe('LIST_USERS');
+    });
+
+    test('should parse "list all"', () => {
+      const result = parseCommand('list all');
+      expect(result.intent).toBe('LIST_USERS');
+    });
   });
 
   describe('parseCommand - REMOVE_USER', () => {
@@ -259,11 +356,11 @@ describe('nlp.service', () => {
     });
 
     test('should throw error for unknown command', () => {
-      expect(() => parseCommand('this is not a valid command')).toThrow('Could not determine intent from command');
+      expect(() => parseCommand('this is not a valid command')).toThrow("I didn't understand that command");
     });
 
     test('should throw error for invalid text', () => {
-      expect(() => parseCommand('hello world')).toThrow('Could not determine intent from command');
+      expect(() => parseCommand('hello world')).toThrow("I didn't understand that command");
     });
   });
 });

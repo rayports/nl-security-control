@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import CommandInput from './components/CommandInput/CommandInput';
-import ResultsDisplay from './components/ResultsDisplay/ResultsDisplay';
 import ErrorDisplay from './components/ErrorDisplay/ErrorDisplay';
 import CommandHistory from './components/CommandHistory/CommandHistory';
 import HistoryDetailView from './components/HistoryDetailView/HistoryDetailView';
@@ -12,7 +11,6 @@ const MAX_HISTORY_ITEMS = 10;
 
 function App() {
   const [commandText, setCommandText] = useState('');
-  const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [commandHistory, setCommandHistory] = useState([]);
@@ -51,12 +49,10 @@ function App() {
 
   const handleSubmit = async (text) => {
     setError(null);
-    setResult(null);
     setLoading(true);
 
     try {
       const response = await sendCommand(text);
-      setResult(response);
       setError(null);
       
       // Add successful command to history with full result data
@@ -64,7 +60,6 @@ function App() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
-      setResult(null);
       
       // Add failed command to history with error message
       addToHistory(text, false, null, errorMessage);
@@ -102,12 +97,6 @@ function App() {
     setSelectedHistoryItem(null);
   };
 
-  const handleRetry = () => {
-    if (commandText.trim()) {
-      handleSubmit(commandText);
-    }
-  };
-
   return (
     <div className="app">
       <header>
@@ -124,18 +113,13 @@ function App() {
           hintText={HINT_TEXT}
         />
 
+        <ErrorDisplay
+          error={error}
+        />
+
         <CommandHistory
           history={commandHistory}
           onHistoryItemClick={handleHistoryItemClick}
-        />
-
-        <ErrorDisplay
-          error={error}
-          onRetry={handleRetry}
-        />
-
-        <ResultsDisplay
-          result={result}
         />
 
         <HistoryDetailView

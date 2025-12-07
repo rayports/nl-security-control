@@ -13,67 +13,84 @@ test.describe('Remove User E2E', () => {
     await commandInput.fill('add user Alice with pin 9876');
     await submitButton.click();
 
-    // Wait for results to appear
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 10000 });
-
-    // Verify the user was added
-    const resultsDisplay = page.locator('.results-display');
-    await expect(resultsDisplay).toBeVisible();
-
-    const interpretationSection = resultsDisplay.locator('section').filter({ hasText: 'Interpretation' });
-    const interpretationText = await interpretationSection.locator('pre').textContent();
-    expect(interpretationText).toContain('ADD_USER');
-    expect(interpretationText).toContain('Alice');
+    // Wait for command to appear in history
+    const addHistoryItem = page.getByTestId('history-item-0');
+    await expect(addHistoryItem).toBeVisible({ timeout: 10000 });
+    await expect(addHistoryItem.getByText('add user Alice with pin 9876')).toBeVisible();
+    await expect(addHistoryItem.getByText('✓')).toBeVisible();
 
     // Verify no error is displayed
     const errorDisplay = page.locator('.error-display');
     await expect(errorDisplay).not.toBeVisible();
 
     // Step 2: Remove the user
-    await commandInput.clear();
     await commandInput.fill('remove user Alice');
     await submitButton.click();
 
-    // Wait for new results to appear
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 10000 });
+    // Wait for remove command to appear in history
+    const removeHistoryItem = page.getByTestId('history-item-0');
+    await expect(removeHistoryItem).toBeVisible({ timeout: 10000 });
+    await expect(removeHistoryItem.getByText('remove user Alice')).toBeVisible();
+    await expect(removeHistoryItem.getByText('✓')).toBeVisible();
 
-    // Verify the results display is visible
-    await expect(resultsDisplay).toBeVisible();
+    // Click on history item to see details
+    await removeHistoryItem.click();
+
+    // Wait for detail view to appear
+    await expect(page.getByText('Command Details')).toBeVisible();
 
     // Verify REMOVE_USER intent
-    const newInterpretationSection = resultsDisplay.locator('section').filter({ hasText: 'Interpretation' });
-    const newInterpretationText = await newInterpretationSection.locator('pre').textContent();
-    expect(newInterpretationText).toContain('REMOVE_USER');
-    expect(newInterpretationText).toContain('Alice');
+    await expect(page.getByText('Interpretation')).toBeVisible();
+    // Find the Interpretation section and get its pre tag
+    const interpretationSection = page.locator('.detail-section').filter({ hasText: 'Interpretation' });
+    const interpretationPre = interpretationSection.locator('pre');
+    await expect(interpretationPre).toBeVisible();
+    const interpretationText = await interpretationPre.textContent();
+    expect(interpretationText).toContain('REMOVE_USER');
 
     // Verify the Response section shows success
-    const responseSection = resultsDisplay.locator('section').filter({ hasText: 'Response' });
-    await expect(responseSection).toBeVisible();
-    
-    const responseText = await responseSection.locator('pre').textContent();
+    await expect(page.getByText('Response')).toBeVisible();
+    // Find the Response section and get its pre tag
+    const responseSection = page.locator('.detail-section').filter({ hasText: 'Response' });
+    const responsePre = responseSection.locator('pre');
+    await expect(responsePre).toBeVisible();
+    const responseText = await responsePre.textContent();
     expect(responseText).toMatch(/success|removed/i);
 
-    // Verify no error is displayed
-    await expect(errorDisplay).not.toBeVisible();
+    // Close detail view
+    await page.getByRole('button', { name: /close/i }).click();
 
     // Step 3: Verify user is no longer in the list
-    await commandInput.clear();
     await commandInput.fill('show me all users');
     await submitButton.click();
 
-    // Wait for new results to appear
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 10000 });
+    // Wait for list command to appear in history
+    const listHistoryItem = page.getByTestId('history-item-0');
+    await expect(listHistoryItem).toBeVisible({ timeout: 10000 });
+    await expect(listHistoryItem.getByText('show me all users')).toBeVisible();
+
+    // Click on history item to see details
+    await listHistoryItem.click();
+
+    // Wait for detail view to appear
+    await expect(page.getByText('Command Details')).toBeVisible();
 
     // Verify LIST_USERS intent
-    const listInterpretationSection = resultsDisplay.locator('section').filter({ hasText: 'Interpretation' });
-    const listInterpretationText = await listInterpretationSection.locator('pre').textContent();
+    await expect(page.getByText('Interpretation')).toBeVisible();
+    // Find the Interpretation section and get its pre tag
+    const listInterpretationSection = page.locator('.detail-section').filter({ hasText: 'Interpretation' });
+    const listInterpretationPre = listInterpretationSection.locator('pre');
+    await expect(listInterpretationPre).toBeVisible();
+    const listInterpretationText = await listInterpretationPre.textContent();
     expect(listInterpretationText).toContain('LIST_USERS');
 
     // Verify Alice is NOT in the response
-    const listResponseSection = resultsDisplay.locator('section').filter({ hasText: 'Response' });
-    await expect(listResponseSection).toBeVisible();
-    
-    const listResponseText = await listResponseSection.locator('pre').textContent();
+    await expect(page.getByText('Response')).toBeVisible();
+    // Find the Response section and get its pre tag
+    const listResponseSection = page.locator('.detail-section').filter({ hasText: 'Response' });
+    const listResponsePre = listResponseSection.locator('pre');
+    await expect(listResponsePre).toBeVisible();
+    const listResponseText = await listResponsePre.textContent();
     expect(listResponseText).not.toContain('Alice');
 
     // Verify no error is displayed

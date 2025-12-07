@@ -13,43 +13,40 @@ test.describe('Disarm System E2E', () => {
     await commandInput.fill('arm the system');
     await submitButton.click();
 
-    // Wait for results to appear
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 10000 });
-
-    // Verify the system was armed
-    const resultsDisplay = page.locator('.results-display');
-    await expect(resultsDisplay).toBeVisible();
-
-    const interpretationSection = resultsDisplay.locator('section').filter({ hasText: 'Interpretation' });
-    const interpretationText = await interpretationSection.locator('pre').textContent();
-    expect(interpretationText).toContain('ARM_SYSTEM');
+    // Wait for command to appear in history
+    const armHistoryItem = page.getByTestId('history-item-0');
+    await expect(armHistoryItem).toBeVisible({ timeout: 10000 });
+    await expect(armHistoryItem.getByText('arm the system')).toBeVisible();
+    await expect(armHistoryItem.getByText('✓')).toBeVisible();
 
     // Verify no error is displayed
     const errorDisplay = page.locator('.error-display');
     await expect(errorDisplay).not.toBeVisible();
 
     // Step 2: Disarm the system
-    await commandInput.clear();
     await commandInput.fill('disarm the system');
     await submitButton.click();
 
-    // Wait for new results to appear
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 10000 });
+    // Wait for disarm command to appear in history
+    const disarmHistoryItem = page.getByTestId('history-item-0');
+    await expect(disarmHistoryItem).toBeVisible({ timeout: 10000 });
+    await expect(disarmHistoryItem.getByText('disarm the system')).toBeVisible();
+    await expect(disarmHistoryItem.getByText('✓')).toBeVisible();
 
-    // Verify the results display is visible
-    await expect(resultsDisplay).toBeVisible();
+    // Click on history item to see details
+    await disarmHistoryItem.click();
+
+    // Wait for detail view to appear
+    await expect(page.getByText('Command Details')).toBeVisible();
 
     // Verify DISARM_SYSTEM intent
-    const newInterpretationSection = resultsDisplay.locator('section').filter({ hasText: 'Interpretation' });
-    const newInterpretationText = await newInterpretationSection.locator('pre').textContent();
-    expect(newInterpretationText).toContain('DISARM_SYSTEM');
-    expect(newInterpretationText).toContain('"intent"');
+    await expect(page.getByText('Interpretation')).toBeVisible();
+    const interpretationText = await page.locator('.history-detail-content').getByText(/DISARM_SYSTEM/i).textContent();
+    expect(interpretationText).toContain('DISARM_SYSTEM');
 
     // Verify the Response section shows disarmed state
-    const responseSection = resultsDisplay.locator('section').filter({ hasText: 'Response' });
-    await expect(responseSection).toBeVisible();
-    
-    const responseText = await responseSection.locator('pre').textContent();
+    await expect(page.getByText('Response')).toBeVisible();
+    const responseText = await page.locator('.history-detail-content').getByText(/disarmed|armed.*false|success/i).textContent();
     expect(responseText).toMatch(/disarmed|armed.*false|success/i);
 
     // Verify no error is displayed

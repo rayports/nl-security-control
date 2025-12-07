@@ -1,7 +1,7 @@
 import React from 'react';
 import './ErrorDisplay.css';
 
-function ErrorDisplay({ error, onRetry }) {
+function ErrorDisplay({ error }) {
   if (!error) {
     return null;
   }
@@ -13,11 +13,6 @@ function ErrorDisplay({ error, onRetry }) {
       <div className="error-message">
         <strong>Error:</strong> {errorMessage}
       </div>
-      {onRetry && (
-        <button onClick={onRetry} className="retry-button">
-          Retry
-        </button>
-      )}
     </div>
   );
 }

@@ -13,73 +13,48 @@ test.describe('Add User and List Users E2E', () => {
     await commandInput.fill('add user John with pin 4321');
     await submitButton.click();
 
-    // Wait for either results or error to appear
-    const resultsDisplay = page.locator('.results-display');
-    const errorDisplay = page.locator('.error-display');
-    
-    // Wait for either results or error (whichever appears first)
-    await Promise.race([
-      resultsDisplay.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null),
-      errorDisplay.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null)
-    ]);
-
-    // Check if error appeared instead of results
-    const isErrorVisible = await errorDisplay.isVisible().catch(() => false);
-    if (isErrorVisible) {
-      const errorText = await errorDisplay.textContent();
-      throw new Error(`Command failed with error: ${errorText}`);
-    }
-
-    // Wait for results to appear
-    await expect(resultsDisplay).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 5000 });
-
-    // Verify success - check for ADD_USER intent
-    await expect(resultsDisplay).toBeVisible();
-
-    const interpretationSection = resultsDisplay.locator('section').filter({ hasText: 'Interpretation' });
-    const interpretationText = await interpretationSection.locator('pre').textContent();
-    expect(interpretationText).toContain('ADD_USER');
-    expect(interpretationText).toContain('John');
+    // Wait for command to appear in history
+    const addHistoryItem = page.getByTestId('history-item-0');
+    await expect(addHistoryItem).toBeVisible({ timeout: 10000 });
+    await expect(addHistoryItem.getByText('add user John with pin 4321')).toBeVisible();
+    await expect(addHistoryItem.getByText('✓')).toBeVisible();
 
     // Verify no error is displayed
+    const errorDisplay = page.locator('.error-display');
     await expect(errorDisplay).not.toBeVisible();
 
-    // Step 2: Clear the input and list users
-    await commandInput.clear();
+    // Step 2: List users
     await commandInput.fill('show me all users');
     await submitButton.click();
 
-    // Wait for new results to appear (or error)
-    await Promise.race([
-      resultsDisplay.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null),
-      errorDisplay.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null)
-    ]);
+    // Wait for list command to appear in history
+    const listHistoryItem = page.getByTestId('history-item-0');
+    await expect(listHistoryItem).toBeVisible({ timeout: 10000 });
+    await expect(listHistoryItem.getByText('show me all users')).toBeVisible();
+    await expect(listHistoryItem.getByText('✓')).toBeVisible();
 
-    // Check if error appeared
-    const isErrorVisible2 = await errorDisplay.isVisible().catch(() => false);
-    if (isErrorVisible2) {
-      const errorText = await errorDisplay.textContent();
-      throw new Error(`List users command failed with error: ${errorText}`);
-    }
+    // Click on history item to see details
+    await listHistoryItem.click();
 
-    // Wait for results to appear
-    await expect(resultsDisplay).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 5000 });
-
-    // Verify the results display is visible
-    await expect(resultsDisplay).toBeVisible();
+    // Wait for detail view to appear
+    await expect(page.getByText('Command Details')).toBeVisible();
 
     // Verify LIST_USERS intent
-    const newInterpretationSection = resultsDisplay.locator('section').filter({ hasText: 'Interpretation' });
-    const newInterpretationText = await newInterpretationSection.locator('pre').textContent();
-    expect(newInterpretationText).toContain('LIST_USERS');
+    await expect(page.getByText('Interpretation')).toBeVisible();
+    // Find the Interpretation section and get its pre tag
+    const interpretationSection = page.locator('.detail-section').filter({ hasText: 'Interpretation' });
+    const interpretationPre = interpretationSection.locator('pre');
+    await expect(interpretationPre).toBeVisible();
+    const interpretationText = await interpretationPre.textContent();
+    expect(interpretationText).toContain('LIST_USERS');
 
     // Verify the response contains "John"
-    const responseSection = resultsDisplay.locator('section').filter({ hasText: 'Response' });
-    await expect(responseSection).toBeVisible();
-    
-    const responseText = await responseSection.locator('pre').textContent();
+    await expect(page.getByText('Response')).toBeVisible();
+    // Find the Response section and get its pre tag
+    const responseSection = page.locator('.detail-section').filter({ hasText: 'Response' });
+    const responsePre = responseSection.locator('pre');
+    await expect(responsePre).toBeVisible();
+    const responseText = await responsePre.textContent();
     expect(responseText).toContain('John');
 
     // Verify the PIN is masked (should contain ****21 or similar pattern)

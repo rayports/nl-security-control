@@ -13,28 +13,28 @@ test.describe('Arm System E2E', () => {
     await commandInput.fill('arm the system to away mode');
     await submitButton.click();
 
-    // Wait for results to appear (wait for the Interpretation section)
-    await expect(page.getByText('Interpretation')).toBeVisible({ timeout: 10000 });
-
-    // Verify the results display is visible
-    const resultsDisplay = page.locator('.results-display');
-    await expect(resultsDisplay).toBeVisible();
-
-    // Verify the Interpretation section contains ARM_SYSTEM intent
-    const interpretationSection = resultsDisplay.locator('section').filter({ hasText: 'Interpretation' });
-    await expect(interpretationSection).toBeVisible();
+    // Wait for command to appear in history
+    const historyItem = page.getByTestId('history-item-0');
+    await expect(historyItem).toBeVisible({ timeout: 10000 });
+    await expect(historyItem.getByText('arm the system to away mode')).toBeVisible();
     
-    // Check that the interpretation JSON contains ARM_SYSTEM
-    const interpretationText = await interpretationSection.locator('pre').textContent();
+    // Verify success indicator
+    await expect(historyItem.getByText('✓')).toBeVisible();
+
+    // Click on history item to see details
+    await historyItem.click();
+
+    // Wait for detail view to appear
+    await expect(page.getByText('Command Details')).toBeVisible();
+    
+    // Verify the Interpretation section contains ARM_SYSTEM intent
+    await expect(page.getByText('Interpretation')).toBeVisible();
+    const interpretationText = await page.locator('.history-detail-content').getByText(/ARM_SYSTEM/i).textContent();
     expect(interpretationText).toContain('ARM_SYSTEM');
-    expect(interpretationText).toContain('"intent"');
 
     // Verify the Response section shows success
-    const responseSection = resultsDisplay.locator('section').filter({ hasText: 'Response' });
-    await expect(responseSection).toBeVisible();
-    
-    // Check that the response contains "armed" or success indication
-    const responseText = await responseSection.locator('pre').textContent();
+    await expect(page.getByText('Response')).toBeVisible();
+    const responseText = await page.locator('.history-detail-content').getByText(/armed|success/i).textContent();
     expect(responseText).toMatch(/armed|success/i);
 
     // Verify no error is displayed

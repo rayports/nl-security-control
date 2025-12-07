@@ -1,5 +1,6 @@
 const { classifyIntent } = require('./intentClassifier');
 const { parseTime, parseWeekendRange } = require('../utils/timeParser');
+const chrono = require('chrono-node');
 
 const parseCommand = (text) => {
   if (!text || typeof text !== 'string') {
@@ -8,7 +9,7 @@ const parseCommand = (text) => {
 
   const intent = classifyIntent(text);
   if (!intent) {
-    throw new Error('Could not determine intent from command');
+    throw new Error('I didn\'t understand that command. Try phrases like "arm the system", "add user John with pin 1234", or "show me all users".');
   }
 
   const entities = {};
@@ -30,10 +31,17 @@ const parseCommand = (text) => {
       /(?:add|create)\s+user\s+([A-Z][a-z]+)\s+passcode/i,
       // "add a temporary user Sarah" or "add user John" - captures just the name before "with", "pin", "passcode", or "using"
       /(?:add|create)\s+(?:a\s+)?(?:temporary\s+|new\s+)?user\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|,|$)/i,
+      // NEW: "add John 1234" or "register John 5678" - name directly after verb, before PIN
+      /^(?:add|register|create)\s+([A-Z][a-z]+)\s+(?:with\s+)?(?:pin|passcode|code)\s+\d{4}/i,
+      /^(?:add|register|create)\s+([A-Z][a-z]+)\s+\d{4}/i,  // "add John 1234"
+      // NEW: "register John" or "add Alice" (without PIN yet)
+      /^(?:register|add|create)\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|$)/i,
       // "remove user John" - captures just the name
       /(?:remove|delete)\s+user\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|$)/i,
-      // "add John with pin" or "remove John" - captures just the name
-      /(?:add|remove|delete)\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|$)/i,
+      // "remove John" or "delete Alice" - captures just the name
+      /(?:remove|delete)\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|$)/i,
+      // "unregister John" - captures just the name
+      /unregister\s+([A-Z][a-z]+)(?:\s+with|\s+pin|\s+passcode|\s+using|$)/i,
       // "John with pin" or "John with passcode" (standalone name before pin/passcode) - captures just the name
       /\b([A-Z][a-z]+)\s+with\s+(?:pin|passcode)/i,
       // "John using passcode" - captures just the name
@@ -117,6 +125,26 @@ const parseCommand = (text) => {
 
   // Extract mode (for ARM_SYSTEM)
   if (intent === 'ARM_SYSTEM') {
+    // Check for time expressions - scheduling is not supported
+    // Look for time indicators that suggest scheduling
+    const timeIndicators = [
+      /\b(?:next|this|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekend|christmas|thanksgiving)\s+\d{1,2}\s*(?:am|pm|:\d{2})/i,  // "next tuesday 9pm"
+      /\b(?:next|this|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekend)\b/i,  // "next tuesday", "tomorrow"
+      /\b\d{1,2}\s*(?:am|pm|:\d{2})\b/i,  // "9pm", "10:30"
+      /\b(?:at|on|in)\s+(?:next|this|tomorrow|\d)/i  // "at 9pm", "on tuesday"
+    ];
+    
+    const hasTimeExpression = timeIndicators.some(pattern => pattern.test(text));
+    
+    if (hasTimeExpression) {
+      // Try to parse a time to confirm it's a real time expression
+      const parsedTime = chrono.parseDate(text);
+      if (parsedTime && parsedTime.getTime() > new Date().getTime()) {
+        // It's a future time - this is a scheduling request
+        throw new Error('Scheduling is not supported. The system cannot arm at a specific time in the future. Please use "arm the system" to arm immediately.');
+      }
+    }
+    
     const lowerText = text.toLowerCase();
     if (lowerText.includes('home')) {
       entities.mode = 'home';
@@ -127,6 +155,25 @@ const parseCommand = (text) => {
     } else {
       // Default to 'away' if not specified
       entities.mode = 'away';
+    }
+  }
+
+  // Check for time expressions in DISARM_SYSTEM commands (scheduling not supported)
+  if (intent === 'DISARM_SYSTEM') {
+    const timeIndicators = [
+      /\b(?:next|this|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekend)\s+\d{1,2}\s*(?:am|pm|:\d{2})/i,
+      /\b(?:next|this|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekend)\b/i,
+      /\b\d{1,2}\s*(?:am|pm|:\d{2})\b/i,
+      /\b(?:at|on|in)\s+(?:next|this|tomorrow|\d)/i
+    ];
+    
+    const hasTimeExpression = timeIndicators.some(pattern => pattern.test(text));
+    
+    if (hasTimeExpression) {
+      const parsedTime = chrono.parseDate(text);
+      if (parsedTime && parsedTime.getTime() > new Date().getTime()) {
+        throw new Error('Scheduling is not supported. The system cannot disarm at a specific time in the future. Please use "disarm the system" to disarm immediately.');
+      }
     }
   }
 
@@ -160,11 +207,24 @@ const parseCommand = (text) => {
         const startWeekend = parseWeekendRange(startTimeText);
         const endWeekend = parseWeekendRange(endTimeText);
         
+        let parsedStartTime = null;
         if (startWeekend) {
-          entities.start_time = startWeekend.start;
+          parsedStartTime = startWeekend.start;
+          entities.start_time = parsedStartTime;
         } else {
-          const parsedStartTime = parseTime(startTimeText);
+          parsedStartTime = parseTime(startTimeText);
           if (parsedStartTime) {
+            // If "today 5pm" is in the past, adjust to tomorrow at 5pm
+            const now = new Date();
+            if (parsedStartTime.getTime() < now.getTime() && startTimeText.toLowerCase().includes('today')) {
+              // It's "today X" but that time has passed - move to tomorrow
+              const tomorrow = new Date(now);
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              const hours = parsedStartTime.getHours();
+              const minutes = parsedStartTime.getMinutes();
+              tomorrow.setHours(hours, minutes, 0, 0);
+              parsedStartTime = tomorrow;
+            }
             entities.start_time = parsedStartTime;
           }
         }
@@ -172,9 +232,26 @@ const parseCommand = (text) => {
         if (endWeekend) {
           entities.end_time = endWeekend.end; // Use end of weekend range
         } else {
-          const parsedEndTime = parseTime(endTimeText);
+          // Use the start time as reference for parsing the end time
+          // This ensures "Sunday" means the Sunday after the start time
+          const referenceDate = parsedStartTime || new Date();
+          const parsedEndTime = parseTime(endTimeText, referenceDate);
           if (parsedEndTime) {
-            entities.end_time = parsedEndTime;
+            // If end time is before start time, it might be the wrong week
+            // Try parsing with a later reference if we have a start time
+            if (parsedStartTime && parsedEndTime.getTime() <= parsedStartTime.getTime()) {
+              // End time is before or equal to start time - try parsing with a later reference
+              const laterReference = new Date(parsedStartTime);
+              laterReference.setDate(laterReference.getDate() + 7); // Add a week
+              const retryEndTime = parseTime(endTimeText, laterReference);
+              if (retryEndTime && retryEndTime.getTime() > parsedStartTime.getTime()) {
+                entities.end_time = retryEndTime;
+              } else {
+                entities.end_time = parsedEndTime; // Use original, validation will catch if wrong
+              }
+            } else {
+              entities.end_time = parsedEndTime;
+            }
           }
         }
       } else {

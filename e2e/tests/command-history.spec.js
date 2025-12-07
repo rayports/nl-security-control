@@ -9,11 +9,8 @@ test.describe('Command History', () => {
     await textarea.fill('arm the system');
     await page.getByRole('button', { name: /execute command/i }).click();
 
-    // Wait for results to appear
-    await expect(page.getByText('User Input')).toBeVisible({ timeout: 10000 });
-
-    // Verify command history section appears
-    await expect(page.getByText(/command history/i)).toBeVisible();
+    // Wait for command to appear in history
+    await expect(page.getByText(/command history/i)).toBeVisible({ timeout: 10000 });
 
     // Verify the command appears in history
     const historyItem = page.getByTestId('history-item-0');

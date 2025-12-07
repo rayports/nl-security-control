@@ -75,23 +75,15 @@ describe('App', () => {
     expect(sendCommand).toHaveBeenCalledWith('arm the system');
     expect(sendCommand).toHaveBeenCalledTimes(1);
 
-    // Wait for API to resolve and results to appear
+    // Wait for command to appear in history (success indicator)
     await waitFor(() => {
-      expect(screen.getByText('User Input')).toBeInTheDocument();
+      const historyContainer = screen.getByTestId('command-history');
+      expect(within(historyContainer).getByText('arm the system')).toBeInTheDocument();
     });
 
-    // Verify results are displayed - query within results container to avoid matching example buttons
-    const resultsContainer = screen.getByText('User Input').closest('.results-display');
-    expect(resultsContainer).toBeInTheDocument();
-    
-    // Verify the result text appears in the results section (not just in textarea or example button)
-    const userInputSection = within(resultsContainer).getByText('arm the system');
-    expect(userInputSection).toBeInTheDocument();
-    
-    // Verify section headings
-    expect(within(resultsContainer).getByText('Interpretation')).toBeInTheDocument();
-    expect(within(resultsContainer).getByText('API Call')).toBeInTheDocument();
-    expect(within(resultsContainer).getByText('Response')).toBeInTheDocument();
+    // Verify success indicator (✓) appears in history
+    const historyContainer = screen.getByTestId('command-history');
+    expect(within(historyContainer).getByText('✓')).toBeInTheDocument();
 
     // Verify button is no longer in loading state
     expect(screen.queryByRole('button', { name: /processing/i })).not.toBeInTheDocument();
@@ -131,11 +123,15 @@ describe('App', () => {
     expect(errorContainer).toBeInTheDocument();
     expect(within(errorContainer).getByText(/invalid command/i)).toBeInTheDocument();
 
-    // Verify retry button appears
-    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
-
-    // Verify results are not displayed
-    expect(screen.queryByText('User Input')).not.toBeInTheDocument();
+    // Verify error appears in history
+    await waitFor(() => {
+      const historyContainer = screen.getByTestId('command-history');
+      expect(within(historyContainer).getByText('invalid command')).toBeInTheDocument();
+    });
+    
+    // Verify error indicator (✗) appears in history
+    const historyContainer = screen.getByTestId('command-history');
+    expect(within(historyContainer).getByText('✗')).toBeInTheDocument();
   });
 
   test('saves command to history after successful execution', async () => {
@@ -160,14 +156,11 @@ describe('App', () => {
     fireEvent.change(textarea, { target: { value: 'arm the system' } });
     fireEvent.click(submitButton);
 
-    // Wait for command to complete
-    await waitFor(() => {
-      expect(screen.getByText('User Input')).toBeInTheDocument();
-    });
-
-    // Verify history appears
+    // Wait for command to appear in history
     await waitFor(() => {
       expect(screen.getByText(/command history/i)).toBeInTheDocument();
+      const historyContainer = screen.getByTestId('command-history');
+      expect(within(historyContainer).getByText('arm the system')).toBeInTheDocument();
     });
 
     // Verify command appears in history (scope to history container)
