@@ -208,6 +208,9 @@ lsof -i :8080
 
 ### Nice-to-Have Improvements
 
+**Design Considerations:**
+- **Name Uniqueness Limitation:** The current system requires unique names because it uses name as the storage key. In production, this would be replaced with unique IDs to allow multiple users with the same name. This is documented in `ARCHITECTURE.md` as a known limitation. The PIN uniqueness restriction was removed (fixed) as it was a security flaw - multiple users can now share PINs, which is common in real security systems.
+
 1. **Add pre-commit hooks** - Run tests before commit
 2. **Add CI/CD configuration** - GitHub Actions workflow
 3. **Add size optimization** - Further reduce Docker image sizes

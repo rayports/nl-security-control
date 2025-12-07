@@ -67,12 +67,20 @@ describe('user.service', () => {
       }).toThrow('User with name "john" already exists');
     });
 
-    test('should reject duplicate user by PIN', () => {
+    test('should allow duplicate PINs (multiple users can share a PIN)', () => {
+      // This is a common pattern in real security systems (family members, guests)
       userService.addUser({ name: 'John', pin: '1234' });
 
-      expect(() => {
-        userService.addUser({ name: 'Bob', pin: '1234' });
-      }).toThrow('User with PIN "1234" already exists');
+      // Should NOT throw - duplicate PINs are allowed
+      const user2 = userService.addUser({ name: 'Bob', pin: '1234' });
+      expect(user2.name).toBe('Bob');
+      expect(user2.pin).toBe('****34');
+
+      // Both users should exist
+      const users = userService.getUsers();
+      expect(users).toHaveLength(2);
+      expect(users.some(u => u.name === 'John')).toBe(true);
+      expect(users.some(u => u.name === 'Bob')).toBe(true);
     });
 
     test('should reject invalid PIN format', () => {

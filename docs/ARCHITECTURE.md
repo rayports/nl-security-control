@@ -201,6 +201,7 @@ Technical design, decisions, and limitations of the Natural Language Security Co
 8. **No Concurrent Safety:** In-memory store is not thread-safe (though Node.js is single-threaded, async operations could cause issues in edge cases)
 9. **No Scheduling:** Cannot schedule commands for future execution
 10. **No Audit Logging:** No persistent audit trail of system changes
+11. **Name Uniqueness Required:** User names must be unique because the storage model uses name as the Map key. In a production system, this would be replaced with unique IDs to allow multiple users with the same name (e.g., multiple "Sarah"s). PINs are intentionally allowed to be duplicated (common in real security systems for family members, guests, etc.)
 
 ## Performance Considerations
 
@@ -260,6 +261,11 @@ Potential improvements for production:
    - Advanced time parsing
    - Command templates
    - Batch operations
+
+8. **User Management Improvements:**
+   - Unique ID system to allow duplicate names
+   - Support for multiple users with the same name
+   - Improved removal logic for ambiguous cases (e.g., when multiple users share a PIN)
 
 ## Testing Strategy
 
