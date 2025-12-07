@@ -34,6 +34,7 @@ This system provides a natural language interface for managing a security system
 - **[Development Guide](docs/DEVELOPMENT.md)** - How to run, test, and develop locally
 - **[Architecture](docs/ARCHITECTURE.md)** - Technical design, decisions, and limitations
 - **[Command Examples](docs/EXAMPLES.md)** - Natural language command examples
+- **[LLM Integration Plan](docs/LLM_INTEGRATION_PLAN.md)** - Design plan for future LLM integration (not implemented)
 - **[Test Verification](TEST_VERIFICATION.md)** - How to verify the project with test suites
 - **[Requirements](docs/requirements.md)** - Original project requirements
 - **[Project Structure](docs/project_structure.md)** - Detailed project organization

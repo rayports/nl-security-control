@@ -16,6 +16,7 @@ nl-security-control/
 │   ├── ARCHITECTURE.md
 │   ├── DEVELOPMENT.md
 │   ├── EXAMPLES.md
+│   ├── LLM_INTEGRATION_PLAN.md
 │   ├── project_structure.md
 │   └── requirements.md
 │
@@ -139,6 +140,7 @@ nl-security-control/
 | `ARCHITECTURE.md` | Technical design, decisions, limitations, and future enhancements |
 | `DEVELOPMENT.md` | Development guide: running locally, testing, troubleshooting |
 | `EXAMPLES.md` | Natural language command examples organized by intent |
+| `LLM_INTEGRATION_PLAN.md` | Design plan for future LLM integration (not implemented - maintains offline capability) |
 | `project_structure.md` | This file - detailed project structure and file descriptions |
 | `requirements.md` | Original project requirements and specifications |
 
