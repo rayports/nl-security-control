@@ -4,290 +4,149 @@ Complete guide for running, testing, and using the Natural Language Security Con
 
 ## Prerequisites
 
-Before starting, ensure you have:
-
-- [ ] **Docker** and **Docker Compose** installed and running
-  - Verify: `docker --version` and `docker compose version`
-- [ ] **Node.js 18+** installed (for running tests locally)
-  - Verify: `node --version`
-- [ ] **Ports 8080 and 3005 available**
-  - Check: `netstat -ano | findstr :8080` (Windows) or `lsof -i :8080` (macOS/Linux)
+- **Docker** and **Docker Compose** installed
+- **Node.js 18+** (for running tests)
+- **Ports 8080 and 3005 available**
 
 ---
 
 ## Quick Start
 
-### Step 1: Clone and Start Services
-
 ```bash
+# Clone and start
 git clone <repository-url>
 cd nl-security-control
 docker compose up --build
-```
 
-**Expected:** Both services build and start successfully. Wait for "Server listening on port 8080" in the logs.
-
-### Step 2: Verify Services
-
-```bash
-# Check container status
-docker compose ps
-
-# Health check
+# Verify backend
 curl http://localhost:8080/healthz
+# Expected: {"status":"ok"}
+
+# Open frontend
+# Browser: http://localhost:3005
 ```
-
-**Expected:** Both containers show "Up" status, health check returns `{"status":"ok"}`
-
-### Step 3: Open the Frontend
-
-Open your browser to: **http://localhost:3005**
-
-You should see:
-- Command input textarea
-- "Execute Command" button
-- Command history section (empty initially)
 
 ---
 
 ## Using the UI
 
-### Basic Usage
-
 1. **Enter a command** in the textarea (e.g., `arm the system`)
 2. **Click "Execute Command"** or press **Enter** (Shift+Enter for new line)
 3. **View results** in the command history below
 
-### Viewing Command Details
+### Clickable Command History
 
 **Click any command in the history** to see detailed information in a modal:
+- Original command text
+- NLP interpretation (intent and extracted entities)
+- API call details (endpoint, method, payload)
+- Full API response or error message
 
-- **Original Command**: The exact text you entered
-- **Interpretation**: How the NLP parsed it (intent and extracted entities)
-- **API Call**: The endpoint, method, and payload that was sent
-- **Response**: The full API response or error message
+This shows how the system processes each command and what API calls are made.
 
-This helps you understand:
-- How the system interpreted your command
-- What API calls were made behind the scenes
-- The complete response from the backend
+### Example Commands
 
-### Example Commands to Try
-
-1. **Arm System:** `arm the system to away mode`
-2. **Add User:** `add user John with pin 4321`
-3. **List Users:** `show me all users`
-4. **Remove User:** `remove user John`
-5. **Disarm System:** `disarm the system`
-6. **Complex Command:** `add a temporary user Sarah, pin 5678 from today 5pm to Sunday 10am`
-7. **Invalid Command:** `hello world` (should show error message)
-
-### UI Features
-
-- **Enter to Submit**: Press Enter to execute (Shift+Enter for new line)
-- **Command History**: All commands are saved with success/error indicators
-- **Clickable History**: Click any history item to see full details
-- **Error Display**: Errors appear above the history with user-friendly messages
-- **Auto-clear Input**: Input field clears after command execution
+- `arm the system to away mode`
+- `add user John with pin 4321`
+- `show me all users`
+- `remove user John`
+- `disarm the system`
+- `add a temporary user Sarah, pin 5678 from today 5pm to Sunday 10am`
+- `hello world` (invalid - shows error)
 
 ---
 
 ## Testing
 
-### Automated Test Suites
-
-#### Backend Tests
-
-```bash
-cd backend
-npm install
-npm test
-```
-
-**Expected:** All unit and integration tests pass (~50+ tests)
-
-**Run specific test suites:**
-```bash
-# Unit tests only
-npm test -- --testPathPattern=unit
-
-# Integration tests only
-npm test -- --testPathPattern=integration
-
-# Specific test file
-npm test -- intentClassifier.test.js
-```
-
-#### Frontend Tests
-
-```bash
-cd frontend
-npm install
-npm test -- --watchAll=false
-```
-
-**Expected:** All React component tests pass (~10+ tests)
-
-#### End-to-End Tests
-
-**Prerequisites:** Ensure Docker Compose is running (`docker compose up -d`)
-
-```bash
-cd e2e
-npm install
-npx playwright install chromium  # First time only
-npm test
-```
-
-**Expected:** All E2E tests pass (~10+ tests covering UI flows)
-
-**Run specific E2E tests:**
-```bash
-npx playwright test arm-system
-npx playwright test command-history
-npx playwright test add-user-and-list
-```
-
-### Full Test Suite
-
-Run all tests in sequence:
+### Run All Tests
 
 ```bash
 # Backend tests
-cd backend && npm test && cd ..
+cd backend && npm install && npm test && cd ..
 
 # Frontend tests
-cd frontend && npm test -- --watchAll=false && cd ..
+cd frontend && npm install && npm test -- --watchAll=false && cd ..
 
 # E2E tests (ensure docker compose is running)
-cd e2e && npm test && cd ..
+cd e2e && npm install && npx playwright install chromium && npm test && cd ..
+```
+
+**Expected:** All tests pass (~70+ total tests)
+
+### Run Specific Test Suites
+
+```bash
+# Backend unit tests only
+cd backend && npm test -- --testPathPattern=unit
+
+# Backend integration tests only
+cd backend && npm test -- --testPathPattern=integration
+
+# Specific E2E test
+cd e2e && npx playwright test arm-system
 ```
 
 ---
 
-## Manual UI Testing
+## Manual UI Testing Checklist
 
-Test the following scenarios in the browser:
-
-### 1. Basic Commands
-- [ ] Arm system command executes successfully
-- [ ] Command appears in history with ✓ indicator
-- [ ] Can click history item to see details
-- [ ] Detail view shows interpretation, API call, and response
-
-### 2. User Management
-- [ ] Add user command works
-- [ ] List users shows added users
-- [ ] Remove user command works
-- [ ] Users are removed from list
-
-### 3. Error Handling
-- [ ] Invalid command shows error message
-- [ ] Error appears above history
-- [ ] Error command appears in history with ✗ indicator
-- [ ] Can click error history item to see error details
-
-### 4. Command History
-- [ ] History persists across page refreshes (LocalStorage)
-- [ ] Can click any history item to view details
-- [ ] Detail modal shows all information correctly
-- [ ] Can close modal and click another item
-
-### 5. Complex Commands
-- [ ] Time range commands work (e.g., "from today 5pm to Sunday 10am")
-- [ ] Permission commands work (e.g., "can arm and disarm")
-- [ ] Narrative commands work (e.g., "My mother-in-law...")
+- [ ] Execute "arm the system" → appears in history with ✓
+- [ ] Click history item → modal shows interpretation, API call, response
+- [ ] Execute "add user John with pin 4321" → user added successfully
+- [ ] Execute "show me all users" → list includes John
+- [ ] Execute "remove user John" → user removed
+- [ ] Execute "hello world" → error message displayed, appears in history with ✗
+- [ ] Click error history item → modal shows error details
+- [ ] Refresh page → history persists (LocalStorage)
+- [ ] Test complex command: "add a temporary user Sarah, pin 5678 from today 5pm to Sunday 10am"
 
 ---
 
 ## Offline Testing
 
-This project works **completely offline** after initial setup.
+After initial setup, the project works **completely offline**.
 
-### Setup (Requires Internet - One Time Only)
-
+**One-time setup (requires internet):**
 ```bash
-# Build Docker images
 docker compose build
-
-# Install npm dependencies
 cd backend && npm install && cd ..
 cd frontend && npm install && cd ..
 cd e2e && npm install && cd ..
 ```
 
-### Verify Offline Readiness
-
-```bash
-# Check Docker images exist
-docker images | grep nl-security-control
-
-# Check node_modules exist
-ls backend/node_modules
-ls frontend/node_modules
-ls e2e/node_modules
-```
-
-### Test Offline
-
-1. **Disconnect from internet**
-2. **Start services:** `docker compose up`
-3. **Run tests:** All test suites should work offline
-4. **Use UI:** All functionality should work offline
-
-**What works offline:**
-- ✅ Running Docker containers
-- ✅ Starting services
-- ✅ Running all tests
-- ✅ Using the application UI
-- ✅ All functionality (no external API calls)
+**Then disconnect and verify:**
+- Services start: `docker compose up`
+- Tests run: All test suites work offline
+- UI works: All functionality available offline
 
 ---
 
 ## Troubleshooting
 
-### Port Already in Use
+**Port in use:** Find process with `netstat -ano | findstr :8080` (Windows) or `lsof -i :8080` (Unix), kill it or change port
 
-```bash
-# Find process using port
-netstat -ano | findstr :8080  # Windows
-lsof -i :8080                  # macOS/Linux
+**Container won't start:** Check logs with `docker compose logs backend`, restart with `docker compose restart backend`
 
-# Kill process or change port in docker-compose.yml
-```
+**Frontend can't connect:** Verify backend: `curl http://localhost:8080/healthz`, check logs: `docker compose logs backend`
 
-### Docker Container Won't Start
+**Tests fail:** Reinstall dependencies: `cd backend && rm -rf node_modules && npm install` (repeat for frontend/e2e)
 
-```bash
-# Check logs
-docker compose logs backend
+**E2E timeout:** Ensure Docker Compose is running: `docker compose ps`, wait for services to be ready
 
-# Restart
-docker compose restart backend
-```
+For more details, see [Development Guide](../DEVELOPMENT.md) or [Potential Issues](../POTENTIAL_ISSUES.md).
 
-### Frontend Can't Connect to Backend
+---
 
-1. Verify backend is running: `curl http://localhost:8080/healthz`
-2. Check Docker logs: `docker compose logs backend`
-3. Check browser console for errors
+## Quick Verification
 
-### Tests Fail
+- [ ] `docker compose up --build` starts both services
+- [ ] `curl http://localhost:8080/healthz` returns `{"status":"ok"}`
+- [ ] Frontend loads at http://localhost:3005
+- [ ] Can execute "arm the system" in UI
+- [ ] Can click command in history to see details
+- [ ] All tests pass: `cd backend && npm test && cd ../frontend && npm test -- --watchAll=false && cd ../e2e && npm test`
 
-```bash
-# Reinstall dependencies
-cd backend && rm -rf node_modules && npm install
-cd ../frontend && rm -rf node_modules && npm install
-cd ../e2e && rm -rf node_modules && npm install
-```
-
-### E2E Tests Timeout
-
-1. Ensure Docker Compose is running: `docker compose ps`
-2. Wait for services to be fully ready
-3. Check logs: `docker compose logs`
-
-For more troubleshooting, see [Development Guide](../DEVELOPMENT.md) or [Potential Issues](../POTENTIAL_ISSUES.md).
+**Expected:** ~70+ tests total, all passing
 
 ---
 
@@ -297,41 +156,4 @@ For more troubleshooting, see [Development Guide](../DEVELOPMENT.md) or [Potenti
 - **[Command Examples](../EXAMPLES.md)** - Natural language command variations
 - **[Architecture](../ARCHITECTURE.md)** - Technical design and decisions
 - **[Development Guide](../DEVELOPMENT.md)** - Detailed development instructions
-- **[Development Guide](../DEVELOPMENT.md)** - Detailed development and Docker commands
-
----
-
-## Verification Checklist
-
-Use this checklist to verify everything works:
-
-### Basic Functionality
-- [ ] Docker Compose starts both services
-- [ ] Frontend loads at http://localhost:3005
-- [ ] Backend health check returns `{"status":"ok"}`
-- [ ] Can execute "arm the system" command
-- [ ] Command appears in history
-- [ ] Can click history item to see details
-
-### Testing
-- [ ] All backend tests pass
-- [ ] All frontend tests pass
-- [ ] All E2E tests pass
-
-### UI Features
-- [ ] Enter-to-submit works
-- [ ] Command history displays correctly
-- [ ] Clickable history shows detail modal
-- [ ] Error messages display correctly
-- [ ] Input clears after submission
-
----
-
-## Expected Test Results
-
-- **Backend Tests:** ~50+ tests (unit + integration)
-- **Frontend Tests:** ~10+ tests (component tests)
-- **E2E Tests:** ~10+ tests (UI flows)
-
-All tests should pass. If any fail, check the troubleshooting section above.
 

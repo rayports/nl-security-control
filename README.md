@@ -2,18 +2,28 @@
 
 A full-stack web application that allows users to control a security system using natural language commands instead of traditional REST API calls.
 
-## TL;DR Quickstart
+## TL;DR - System Verification
 
 ```bash
-# Build and start all services
+# 1. Start services
 docker compose up --build
 
-# Open frontend in browser
-http://localhost:3005
-
-# Health check
+# 2. Verify backend health
 curl http://localhost:8080/healthz
+# Expected: {"status":"ok"}
+
+# 3. Test a command via API
+curl -X POST http://localhost:8080/nl/execute \
+  -H "Content-Type: application/json" \
+  -d '{"text":"arm the system"}'
+# Expected: JSON response with interpretation and API call details
+
+# 4. Open UI and test
+# Browser: http://localhost:3005
+# Try: "arm the system" → Click command in history to see details
 ```
+
+For complete usage instructions, see [Usage Guide](docs/guides/USAGE_GUIDE.md).
 
 ## Project Overview
 
@@ -82,41 +92,11 @@ nl-security-control/
 
 ## Getting Started
 
-### Prerequisites
-
-- **Docker** and **Docker Compose** installed and running
-- **Node.js 18+** (for running tests locally)
-- **Ports 8080 and 3005 available**
-
-### Quick Start
-
-1. **Clone the repository**
-2. **Start the services:**
-   ```bash
-   docker compose up --build
-   ```
-3. **Open the frontend:** http://localhost:3005
-4. **Try a command:** Type "arm the system" and click Execute
-5. **View details:** Click any command in the history to see the full interpretation, API call details, and response
-
-For detailed setup and usage instructions, see the [Usage Guide](docs/guides/USAGE_GUIDE.md).
-
-## Testing
-
-Run all test suites to verify the project:
-
-```bash
-# Backend tests
-cd backend && npm test
-
-# Frontend tests
-cd frontend && npm test -- --watchAll=false
-
-# E2E tests (ensure docker compose is running)
-cd e2e && npm test
-```
-
-See [Usage Guide](docs/guides/USAGE_GUIDE.md) for detailed testing instructions.
+See [Usage Guide](docs/guides/USAGE_GUIDE.md) for complete instructions on:
+- Running the system
+- Using the UI (including clickable command history)
+- Running tests
+- Troubleshooting
 
 ## Documentation
 
